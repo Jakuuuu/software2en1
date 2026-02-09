@@ -1,0 +1,1 @@
+El diseño del software debe ser minimalista, estetico y funcional. Debe ener un diseño hecho para ingenieros con colores sobrios y elegantes. Debe permitir al usuario navegar facilmente por el software. Debe tener un diseño que se adapte a diferentes tamaños de pantalla.
