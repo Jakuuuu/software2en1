@@ -8,8 +8,9 @@ import { Partida, Resource, PartidaFormData, Project } from '@/types';
 import { generatePartidaPDF, generateBudgetPDF } from '@/utils/pdfGenerator';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import PartidaFormModal from '@/components/PartidaFormModal';
-import { useProjects, usePartidas } from '@/hooks/useData';
+import { useProjects, usePartidas, DEFAULT_LEGAL_CONFIG } from '@/hooks/useData';
 import { formatCurrency } from '@/utils/currency';
+import { calculateUnitPrice } from '@/utils/calculations';
 
 export default function ProjectBudgetPage() {
     const params = useParams();
@@ -75,15 +76,60 @@ export default function ProjectBudgetPage() {
 
         // Process data in next tick to prevent UI blocking during animation
         setTimeout(() => {
+            // Prepare resources with totals
+            const materials = data.materials.map(m => ({
+                ...m,
+                total: m.quantity * m.unitPrice
+            }));
+            const equipment = data.equipment.map(e => ({
+                ...e,
+                total: e.quantity * e.unitPrice
+            }));
+            const labor = data.labor.map(l => ({
+                ...l,
+                total: l.quantity * l.unitPrice
+            }));
+
+            // Calculate Unit Price and APU details
+            // Use default config if project is somehow undefined, though it shouldn't be here
+            const config = project?.legalConfig || DEFAULT_LEGAL_CONFIG;
+            const calc = calculateUnitPrice(materials, equipment, labor, config);
+
+            // Construct APU object
+            const apu = {
+                materials,
+                equipment,
+                labor,
+                subtotals: {
+                    materials: calc.breakdown.materials + calc.breakdown.lopcymat, // Include LOPCYMAT in total materials cost for simplicity
+                    equipment: calc.breakdown.equipment,
+                    labor: calc.breakdown.labor + calc.breakdown.socialCharges // Include Social Charges in total labor cost
+                },
+                legalCharges: {
+                    lopcymat: calc.breakdown.lopcymat,
+                    inces: 0, // Included in proper calculation but not separated here
+                    sso: 0    // Included in taxes
+                },
+                directCost: calc.directCost,
+                indirectCosts: {
+                    administration: calc.breakdown.administration,
+                    utilities: calc.breakdown.utilities,
+                    profit: calc.breakdown.profit,
+                    total: calc.indirectCosts
+                },
+                unitPrice: calc.unitPrice
+            };
+
             const newPartida: Partial<Partida> = {
                 code: data.code,
                 description: data.description,
                 unit: data.unit,
                 quantity: data.quantity,
-                unitPrice: 0, // Would be calculated from APU
-                contracted: 0,
+                unitPrice: calc.unitPrice,
+                contracted: data.quantity * calc.unitPrice, // Assuming contracted amount matches estimated
                 previousAccumulated: 0,
-                thisValuation: 0
+                thisValuation: 0,
+                apu: apu as any // Cast to any to avoid strict type mismatch with interface details if they differ slightly
             };
 
             if (editingPartida) {
