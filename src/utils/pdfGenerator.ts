@@ -183,15 +183,15 @@ export const generateValuationPDF = (
     currentY = addSectionTitle(doc, 'DESGLOSE DE PARTIDAS', currentY, true);
 
     // Prepare table data
-    const tableData = valuation.items.map(item => {
+    const tableData = valuation.items.reduce<string[][]>((acc, item) => {
         const partida = partidas.find(p => p.id === item.partidaId);
-        if (!partida) return null;
+        if (!partida) return acc;
 
         const previousAccum = partida.previousAccumulated || 0;
         const thisVal = item.quantity;
         const newAccum = previousAccum + thisVal;
 
-        return [
+        acc.push([
             partida.code,
             partida.description,
             partida.unit,
@@ -201,8 +201,9 @@ export const generateValuationPDF = (
             newAccum.toFixed(2),
             formatCurrencyForPDF(item.unitPrice, currency),
             formatCurrencyForPDF(item.amount, currency)
-        ];
-    }).filter((row): row is string[] => row !== null);
+        ]);
+        return acc;
+    }, []);
 
     // Add table
     autoTable(doc, {
