@@ -93,7 +93,7 @@ export default function ValuationFormModal({
     // Calculate totals
     const grossAmount = progress.reduce((sum, p) => sum + (p.thisValuation * p.unitPrice), 0);
 
-    const legalConfig = project.legalConfig || DEFAULT_LEGAL_CONFIG;
+    const legalConfig = { ...DEFAULT_LEGAL_CONFIG, ...(project.legalConfig || {}) };
     const currency = project.contract?.currency || 'USD';
 
     // Calculate potential amortization (same % as advance payment)
