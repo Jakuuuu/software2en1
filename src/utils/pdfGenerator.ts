@@ -36,7 +36,7 @@ export const generateValuationPDF = (
 ) => {
     const doc = new jsPDF();
     const { margins, colors, fonts } = PDF_STYLES;
-    const currency = project.contract.currency;
+    const currency = project?.contract?.currency || 'USD';
 
     // Filename
     const filename = `Valuacion_${valuation.number}_${project.code}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -60,8 +60,8 @@ export const generateValuationPDF = (
     const projectInfo = [
         { label: 'Proyecto', value: project.name },
         { label: 'Código', value: project.code },
-        { label: 'Ubicación', value: `${project.location.city}, ${project.location.state}` },
-        { label: 'Contrato', value: project.contract.number }
+        { label: 'Ubicación', value: project.location ? `${project.location.city}, ${project.location.state}` : 'N/A' },
+        { label: 'Contrato', value: project.contract?.number || 'N/A' }
     ];
 
     currentY = addInfoBox(doc, margins.left, currentY, 90, 25, projectInfo);
@@ -71,9 +71,9 @@ export const generateValuationPDF = (
     currentY = addSectionTitle(doc, 'INFORMACIÓN DEL CLIENTE', currentY, true);
 
     const clientInfo = [
-        { label: 'Cliente', value: project.client.name },
-        { label: 'RIF', value: project.client.rif },
-        { label: 'Dirección', value: project.client.address }
+        { label: 'Cliente', value: project.client?.name || 'N/A' },
+        { label: 'RIF', value: project.client?.rif || 'N/A' },
+        { label: 'Dirección', value: project.client?.address || 'N/A' }
     ];
 
     currentY = addInfoBox(doc, margins.left, currentY, 90, 20, clientInfo);
@@ -83,8 +83,8 @@ export const generateValuationPDF = (
     currentY = addSectionTitle(doc, 'INFORMACIÓN DEL CONTRATISTA', currentY, true);
 
     const contractorInfo = [
-        { label: 'Contratista', value: project.contractor.name },
-        { label: 'RIF', value: project.contractor.rif }
+        { label: 'Contratista', value: project.contractor?.name || 'N/A' },
+        { label: 'RIF', value: project.contractor?.rif || 'N/A' }
     ];
 
     currentY = addInfoBox(doc, margins.left, currentY, 90, 15, contractorInfo);
@@ -101,20 +101,22 @@ export const generateValuationPDF = (
         }
     ];
 
+    const legalConfig = project.legalConfig || DEFAULT_LEGAL_CONFIG;
+
     // Add deductions
     if (valuation.deductions.advancePayment > 0) {
         financialItems.push({
-            label: `(-) Amortización Anticipo (${project.legalConfig.advancePayment * 100}%)`,
+            label: `(-) Amortización Anticipo (${legalConfig.advancePayment * 100}%)`,
             value: formatCurrencyForPDF(valuation.deductions.advancePayment, currency),
             type: 'negative' as any
         });
     }
 
     // IVA
-    const ivaAmount = valuation.grossAmount * (project.legalConfig.ivaRate);
-    if (project.legalConfig.ivaRate > 0) {
+    const ivaAmount = valuation.grossAmount * (legalConfig.ivaRate);
+    if (legalConfig.ivaRate > 0) {
         financialItems.push({
-            label: `(+) IVA (${(project.legalConfig.ivaRate * 100).toFixed(0)}%)`,
+            label: `(+) IVA (${(legalConfig.ivaRate * 100).toFixed(0)}%)`,
             value: formatCurrencyForPDF(ivaAmount, currency),
             type: 'positive' as any
         });
@@ -122,7 +124,7 @@ export const generateValuationPDF = (
 
     if (valuation.deductions.ivaRetention > 0) {
         financialItems.push({
-            label: `(-) Retención IVA (${(project.legalConfig.retentionIVA * 100).toFixed(0)}%)`,
+            label: `(-) Retención IVA (${(legalConfig.retentionIVA * 100).toFixed(0)}%)`,
             value: formatCurrencyForPDF(valuation.deductions.ivaRetention, currency),
             type: 'negative' as any
         });
@@ -130,7 +132,7 @@ export const generateValuationPDF = (
 
     if (valuation.deductions.islrRetention > 0) {
         financialItems.push({
-            label: `(-) Retención ISLR (${(project.legalConfig.retentionISLR * 100).toFixed(0)}%)`,
+            label: `(-) Retención ISLR (${(legalConfig.retentionISLR * 100).toFixed(0)}%)`,
             value: formatCurrencyForPDF(valuation.deductions.islrRetention, currency),
             type: 'negative' as any
         });
@@ -138,7 +140,7 @@ export const generateValuationPDF = (
 
     if (valuation.deductions.guaranteeFund > 0) {
         financialItems.push({
-            label: `(-) Fondo de Garantía (${(project.legalConfig.performanceBond * 100).toFixed(0)}%)`,
+            label: `(-) Fondo de Garantía (${(legalConfig.performanceBond * 100).toFixed(0)}%)`,
             value: formatCurrencyForPDF(valuation.deductions.guaranteeFund, currency),
             type: 'negative' as any
         });
@@ -154,7 +156,7 @@ export const generateValuationPDF = (
     currentY = addFinancialSummary(doc, margins.left, currentY, 90, financialItems, currency);
 
     // Exchange rate if USD
-    if (currency === 'USD' && project.contract.exchangeRate) {
+    if (currency === 'USD' && project.contract?.exchangeRate) {
         currentY += 5;
         doc.setFontSize(fonts.small);
         doc.setFont('helvetica', 'italic');
@@ -282,7 +284,7 @@ export const generatePartidaPDF = (partida: Partida, project?: Project) => {
     const doc = new jsPDF();
     const { margins, colors, fonts } = PDF_STYLES;
     const filename = `APU_${partida.code || 'UNKNOWN'}.pdf`;
-    const currency = project?.contract.currency || 'USD'; // Default to USD if no project
+    const currency = project?.contract?.currency || 'USD';
 
     // ========================================
     // HEADER
@@ -328,7 +330,7 @@ export const generatePartidaPDF = (partida: Partida, project?: Project) => {
     doc.text('DESCRIPCIÓN:', margins.left, currentY);
     doc.setFont('helvetica', 'normal');
 
-    const splitDescription = doc.splitTextToSize(partida.description, 180);
+    const splitDescription = doc.splitTextToSize(partida.description || '', 180);
     doc.text(splitDescription, margins.left, currentY + 6);
 
     currentY += 15 + (splitDescription.length * 5);
@@ -482,10 +484,11 @@ export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
     try {
         const doc = new jsPDF();
         const { margins, colors, fonts } = PDF_STYLES;
-        const currency = project.contract.currency;
-        const legalConfig = project.legalConfig || DEFAULT_LEGAL_CONFIG;
+        // Defensive access
+        const currency = project?.contract?.currency || 'USD';
+        const legalConfig = project?.legalConfig || DEFAULT_LEGAL_CONFIG;
 
-        const filename = `Presupuesto_${project.code}_${new Date().toISOString().split('T')[0]}.pdf`;
+        const filename = `Presupuesto_${project?.code || 'SIN_CODIGO'}_${new Date().toISOString().split('T')[0]}.pdf`;
 
         // 1. Header
         let currentY = addProjectHeader(
@@ -501,17 +504,17 @@ export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
         currentY = addSectionTitle(doc, 'INFORMACIÓN GENERAL', currentY, true);
 
         const projectInfo = [
-            { label: 'Proyecto', value: project.name },
-            { label: 'Ubicación', value: `${project.location.city}, ${project.location.state}` },
-            { label: 'Cliente', value: project.client.name },
-            { label: 'Contratista', value: project.contractor.name }
+            { label: 'Proyecto', value: project?.name || 'N/A' },
+            { label: 'Ubicación', value: project?.location ? `${project.location.city}, ${project.location.state}` : 'N/A' },
+            { label: 'Cliente', value: project?.client?.name || 'N/A' },
+            { label: 'Contratista', value: project?.contractor?.name || 'N/A' }
         ];
 
         currentY = addInfoBox(doc, margins.left, currentY, 190, 25, projectInfo);
         currentY += 10;
 
         // 3. Items Table
-        if (partidas.length > 0) {
+        if (partidas && partidas.length > 0) {
             doc.autoTable({
                 startY: currentY,
                 head: [['Código', 'Descripción', 'Unidad', 'Cantidad', 'P. Unitario', 'Total']],
@@ -556,7 +559,8 @@ export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
 
         // 4. Totals
         const totalAmount = partidas.reduce((sum, p) => sum + ((p.quantity || 0) * (p.unitPrice || 0)), 0);
-        const ivaAmount = totalAmount * (legalConfig.ivaRate || 0);
+        const ivaRate = legalConfig.ivaRate || 0;
+        const ivaAmount = totalAmount * ivaRate;
         const totalWithIva = totalAmount + ivaAmount;
 
         currentY = checkPageBreak(doc, currentY, 50);
@@ -586,7 +590,7 @@ export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
 
         // IVA
         doc.setFont('helvetica', 'bold');
-        doc.text(`IVA (${((legalConfig.ivaRate || 0) * 100).toFixed(0)}%):`, labelX, totalY);
+        doc.text(`IVA (${(ivaRate * 100).toFixed(0)}%):`, labelX, totalY);
         doc.setFont('helvetica', 'normal');
         doc.text(formatCurrencyForPDF(ivaAmount, currency), valueX, totalY, { align: 'right' });
 
@@ -600,7 +604,7 @@ export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
         doc.text(formatCurrencyForPDF(totalWithIva, currency), valueX, totalY, { align: 'right' });
 
         // Exchange rate note
-        if (currency === 'USD' && project.contract.exchangeRate) {
+        if (currency === 'USD' && project.contract?.exchangeRate) {
             totalY += 10;
             doc.setFontSize(fonts.small);
             doc.setTextColor(100, 100, 100);
@@ -611,6 +615,6 @@ export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
         doc.save(filename);
     } catch (error) {
         console.error("Error generating budget PDF:", error);
-        alert("Hubo un error al generar el PDF. Revisa la consola para más detalles.");
+        alert(`Error al generar el PDF: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     }
 };
