@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { Partida, Project, Valuation } from '../types';
 import {
     addProjectHeader,
@@ -16,14 +16,15 @@ import {
 import { DEFAULT_LEGAL_CONFIG } from '@/hooks/useData';
 
 // Declare autoTable for TypeScript
+/*
 declare module 'jspdf' {
     interface jsPDF {
-        autoTable: (options: any) => jsPDF;
         lastAutoTable: {
             finalY: number;
         };
     }
 }
+*/
 
 // ============================================
 // GENERATE VALUATION PDF
@@ -204,7 +205,7 @@ export const generateValuationPDF = (
     }).filter(Boolean);
 
     // Add table
-    doc.autoTable({
+    autoTable(doc, {
         startY: currentY,
         head: [[
             'Código',
@@ -247,7 +248,7 @@ export const generateValuationPDF = (
         }
     });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+    currentY = (doc as any).lastAutoTable.finalY + 10;
 
     // Total
     doc.setFontSize(fonts.heading);
@@ -363,7 +364,7 @@ export const generatePartidaPDF = (partida: Partida, project?: Project) => {
             formatCurrencyForPDF(item.total, currency)
         ]);
 
-        doc.autoTable({
+        autoTable(doc, {
             startY: startY,
             head: [['Descripción', 'Unidad', 'Cantidad', 'Costo Unit.', 'Total']],
             body: body,
@@ -386,7 +387,7 @@ export const generatePartidaPDF = (partida: Partida, project?: Project) => {
             }
         });
 
-        return doc.lastAutoTable.finalY + 10;
+        return (doc as any).lastAutoTable.finalY + 10;
     };
 
     // 1. Materials
@@ -515,7 +516,7 @@ export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
 
         // 3. Items Table
         if (partidas && partidas.length > 0) {
-            doc.autoTable({
+            autoTable(doc, {
                 startY: currentY,
                 head: [['Código', 'Descripción', 'Unidad', 'Cantidad', 'P. Unitario', 'Total']],
                 body: partidas.map(p => [
@@ -550,7 +551,7 @@ export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
                     addPageFooter(doc, doc.getNumberOfPages());
                 }
             });
-            currentY = doc.lastAutoTable.finalY + 10;
+            currentY = (doc as any).lastAutoTable.finalY + 10;
         } else {
             doc.setFontSize(fonts.normal);
             doc.text('No hay partidas registradas en este presupuesto.', margins.left, currentY + 10);
