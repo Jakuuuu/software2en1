@@ -202,7 +202,7 @@ export const generateValuationPDF = (
             formatCurrencyForPDF(item.unitPrice, currency),
             formatCurrencyForPDF(item.amount, currency)
         ];
-    }).filter(Boolean);
+    }).filter((row): row is string[] => row !== null);
 
     // Add table
     autoTable(doc, {
