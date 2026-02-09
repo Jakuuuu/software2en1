@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Pencil, Trash2, ChevronDown, ChevronRight, FileDown, Calculator } from 'lucide-react';
 import { Partida, Resource, PartidaFormData, Project } from '@/types';
-import { generatePartidaPDF } from '@/utils/pdfGenerator';
+import { generatePartidaPDF, generateBudgetPDF } from '@/utils/pdfGenerator';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import PartidaFormModal from '@/components/PartidaFormModal';
 import { useProjects, usePartidas } from '@/hooks/useData';
@@ -69,25 +69,29 @@ export default function ProjectBudgetPage() {
     };
 
     const handleSavePartida = (data: PartidaFormData) => {
-        const newPartida: Partial<Partida> = {
-            code: data.code,
-            description: data.description,
-            unit: data.unit,
-            quantity: data.quantity,
-            unitPrice: 0, // Would be calculated from APU
-            contracted: 0,
-            previousAccumulated: 0,
-            thisValuation: 0
-        };
-
-        if (editingPartida) {
-            updatePartida(editingPartida.id, newPartida);
-        } else {
-            addPartida(newPartida as Omit<Partida, 'id' | 'createdAt' | 'updatedAt'>);
-        }
-
+        // Optimistic UI: Close modal immediately
         setShowPartidaModal(false);
         setEditingPartida(null);
+
+        // Process data in next tick to prevent UI blocking during animation
+        setTimeout(() => {
+            const newPartida: Partial<Partida> = {
+                code: data.code,
+                description: data.description,
+                unit: data.unit,
+                quantity: data.quantity,
+                unitPrice: 0, // Would be calculated from APU
+                contracted: 0,
+                previousAccumulated: 0,
+                thisValuation: 0
+            };
+
+            if (editingPartida) {
+                updatePartida(editingPartida.id, newPartida);
+            } else {
+                addPartida(newPartida as Omit<Partida, 'id' | 'createdAt' | 'updatedAt'>);
+            }
+        }, 0);
     };
 
     const totalBudget = partidas.reduce((sum, p) => sum + (p.contracted || 0), 0);
@@ -133,13 +137,22 @@ export default function ProjectBudgetPage() {
                             )}
                         </p>
                     </div>
-                    <button
-                        onClick={handleNewPartida}
-                        className="px-5 py-2.5 bg-indigo-600 rounded-lg font-medium text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2"
-                    >
-                        <Plus size={18} />
-                        Nueva Partida
-                    </button>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => project && generateBudgetPDF(project, partidas)}
+                            className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-all flex items-center gap-2"
+                        >
+                            <FileDown size={18} />
+                            Descargar Presupuesto
+                        </button>
+                        <button
+                            onClick={handleNewPartida}
+                            className="px-5 py-2.5 bg-indigo-600 rounded-lg font-medium text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2"
+                        >
+                            <Plus size={18} />
+                            Nueva Partida
+                        </button>
+                    </div>
                 </div>
 
                 {/* Partidas List */}
