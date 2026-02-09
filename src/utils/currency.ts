@@ -8,10 +8,14 @@ import { Currency } from '../types';
  * Format currency based on type (VES or USD)
  */
 export const formatCurrency = (
-    amount: number,
+    amount: number | undefined | null,
     currency: Currency,
     includeSymbol: boolean = true
 ): string => {
+    if (amount === undefined || amount === null || isNaN(amount)) {
+        return currency === 'USD' ? '$0.00' : 'Bs. 0.00';
+    }
+
     const formatted = amount.toLocaleString('es-VE', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2

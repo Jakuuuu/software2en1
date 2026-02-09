@@ -38,7 +38,7 @@ export default function ValuationFormModal({
     partidas,
     onClose,
     onSave,
-    existingValuations
+    existingValuations = []
 }: ValuationFormModalProps) {
     const [periodStart, setPeriodStart] = useState('');
     const [periodEnd, setPeriodEnd] = useState('');
@@ -47,17 +47,24 @@ export default function ValuationFormModal({
 
     // Initialize progress state
     useEffect(() => {
-        const initialProgress: PartidaProgress[] = partidas.map(p => ({
-            partidaId: p.id,
-            code: p.code,
-            description: p.description,
-            unit: p.unit,
-            contracted: p.quantity || 0,
-            unitPrice: p.unitPrice || 0,
-            previousAccumulated: p.previousAccumulated || 0,
-            thisValuation: 0,
-            remaining: (p.quantity || 0) - (p.previousAccumulated || 0)
-        }));
+        if (!partidas) {
+            setProgress([]);
+            return;
+        }
+
+        const initialProgress: PartidaProgress[] = partidas
+            .filter(p => !!p)
+            .map(p => ({
+                partidaId: p.id,
+                code: p.code,
+                description: p.description,
+                unit: p.unit,
+                contracted: p.quantity || 0,
+                unitPrice: p.unitPrice || 0,
+                previousAccumulated: p.previousAccumulated || 0,
+                thisValuation: 0,
+                remaining: (p.quantity || 0) - (p.previousAccumulated || 0)
+            }));
         setProgress(initialProgress);
     }, [partidas]);
 
