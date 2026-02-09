@@ -100,11 +100,25 @@ export default function ValuationFormModal({
     const potentialAmortization = grossAmount * legalConfig.advancePayment;
 
     // Use utility for all legal calculations
-    const totals = calculateValuationNetAmount(
-        grossAmount,
-        legalConfig,
-        potentialAmortization
-    );
+    let totals = {
+        iva: 0,
+        amortization: 0,
+        retentionIVA: 0,
+        retentionISLR: 0,
+        performanceBond: 0,
+        netAmount: 0
+    };
+
+    try {
+        console.log('Calculating valuation totals:', { grossAmount, legalConfig, potentialAmortization });
+        totals = calculateValuationNetAmount(
+            grossAmount,
+            legalConfig,
+            potentialAmortization
+        );
+    } catch (error) {
+        console.error('Error calculating valuation totals:', error);
+    }
 
     const {
         iva: ivaAmount,
