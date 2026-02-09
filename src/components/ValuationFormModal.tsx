@@ -59,11 +59,11 @@ export default function ValuationFormModal({
                 code: p.code,
                 description: p.description,
                 unit: p.unit,
-                contracted: p.quantity || 0,
-                unitPrice: p.unitPrice || 0,
-                previousAccumulated: p.previousAccumulated || 0,
+                contracted: Number(p.quantity || 0),
+                unitPrice: Number(p.unitPrice || 0),
+                previousAccumulated: Number(p.previousAccumulated || 0),
                 thisValuation: 0,
-                remaining: (p.quantity || 0) - (p.previousAccumulated || 0)
+                remaining: Number(p.quantity || 0) - Number(p.previousAccumulated || 0)
             }));
         setProgress(initialProgress);
     }, [partidas]);
@@ -301,14 +301,14 @@ export default function ValuationFormModal({
                                                         <span className="text-slate-600">{p.unit}</span>
                                                     </td>
                                                     <td className="p-3 text-right text-slate-600">
-                                                        {(p.contracted || 0).toFixed(2)}
+                                                        {Number(p.contracted || 0).toFixed(2)}
                                                     </td>
                                                     <td className="p-3 text-right text-slate-600">
-                                                        {(p.previousAccumulated || 0).toFixed(2)}
+                                                        {Number(p.previousAccumulated || 0).toFixed(2)}
                                                     </td>
                                                     <td className="p-3 text-right">
                                                         <span className={p.remaining > 0 ? 'text-amber-600 font-medium' : 'text-slate-400'}>
-                                                            {(p.remaining || 0).toFixed(2)}
+                                                            {Number(p.remaining || 0).toFixed(2)}
                                                         </span>
                                                     </td>
                                                     <td className="p-3">
