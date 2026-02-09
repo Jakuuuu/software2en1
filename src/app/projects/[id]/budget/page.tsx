@@ -139,8 +139,17 @@ export default function ProjectBudgetPage() {
                     </div>
                     <div className="flex gap-3">
                         <button
-                            onClick={() => project && generateBudgetPDF(project, partidas)}
-                            className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-all flex items-center gap-2"
+                            onClick={() => {
+                                console.log("Attempting to generate PDF...");
+                                if (!project) {
+                                    console.error("Project is null");
+                                    return;
+                                }
+                                console.log("Project:", project);
+                                console.log("Partidas:", partidas);
+                                generateBudgetPDF(project, partidas);
+                            }}
+                            className="px-5 py-2.5 bg-rose-600 border border-transparent text-white rounded-lg font-medium hover:bg-rose-700 transition-all flex items-center gap-2 shadow-sm"
                         >
                             <FileDown size={18} />
                             Descargar Presupuesto

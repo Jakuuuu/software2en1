@@ -13,6 +13,7 @@ import {
     formatDateForPDF,
     PDF_STYLES
 } from './pdfStyles';
+import { DEFAULT_LEGAL_CONFIG } from '@/hooks/useData';
 
 // Declare autoTable for TypeScript
 declare module 'jspdf' {
@@ -478,126 +479,138 @@ export const generatePartidaPDF = (partida: Partida, project?: Project) => {
 // ============================================
 
 export const generateBudgetPDF = (project: Project, partidas: Partida[]) => {
-    const doc = new jsPDF();
-    const { margins, colors, fonts } = PDF_STYLES;
-    const currency = project.contract.currency;
-    const filename = `Presupuesto_${project.code}_${new Date().toISOString().split('T')[0]}.pdf`;
+    try {
+        const doc = new jsPDF();
+        const { margins, colors, fonts } = PDF_STYLES;
+        const currency = project.contract.currency;
+        const legalConfig = project.legalConfig || DEFAULT_LEGAL_CONFIG;
 
-    // 1. Header
-    let currentY = addProjectHeader(
-        doc,
-        project,
-        'PRESUPUESTO DE OBRA',
-        `Fecha: ${formatDateForPDF(new Date())}`
-    );
+        const filename = `Presupuesto_${project.code}_${new Date().toISOString().split('T')[0]}.pdf`;
 
-    currentY += 5;
+        // 1. Header
+        let currentY = addProjectHeader(
+            doc,
+            project,
+            'PRESUPUESTO DE OBRA',
+            `Fecha: ${formatDateForPDF(new Date())}`
+        );
 
-    // 2. Project Info
-    currentY = addSectionTitle(doc, 'INFORMACIÓN GENERAL', currentY, true);
+        currentY += 5;
 
-    const projectInfo = [
-        { label: 'Proyecto', value: project.name },
-        { label: 'Ubicación', value: `${project.location.city}, ${project.location.state}` },
-        { label: 'Cliente', value: project.client.name },
-        { label: 'Contratista', value: project.contractor.name }
-    ];
+        // 2. Project Info
+        currentY = addSectionTitle(doc, 'INFORMACIÓN GENERAL', currentY, true);
 
-    currentY = addInfoBox(doc, margins.left, currentY, 190, 25, projectInfo);
-    currentY += 10;
+        const projectInfo = [
+            { label: 'Proyecto', value: project.name },
+            { label: 'Ubicación', value: `${project.location.city}, ${project.location.state}` },
+            { label: 'Cliente', value: project.client.name },
+            { label: 'Contratista', value: project.contractor.name }
+        ];
 
-    // 3. Items Table
-    doc.autoTable({
-        startY: currentY,
-        head: [['Código', 'Descripción', 'Unidad', 'Cantidad', 'P. Unitario', 'Total']],
-        body: partidas.map(p => [
-            p.code,
-            p.description,
-            p.unit,
-            p.quantity.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            formatCurrencyForPDF(p.unitPrice, currency),
-            formatCurrencyForPDF((p.quantity * p.unitPrice), currency)
-        ]),
-        theme: 'striped',
-        headStyles: {
-            fillColor: colors.primary,
-            textColor: colors.white,
-            fontSize: fonts.small,
-            fontStyle: 'bold',
-            halign: 'center'
-        },
-        styles: {
-            fontSize: fonts.small - 1,
-            cellPadding: 2
-        },
-        columnStyles: {
-            0: { cellWidth: 25, fontSize: fonts.small - 1 },
-            1: { cellWidth: 'auto' },
-            2: { cellWidth: 15, halign: 'center' },
-            3: { cellWidth: 20, halign: 'right' },
-            4: { cellWidth: 25, halign: 'right' },
-            5: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
-        },
-        didDrawPage: (data: any) => {
-            addPageFooter(doc, doc.getNumberOfPages());
+        currentY = addInfoBox(doc, margins.left, currentY, 190, 25, projectInfo);
+        currentY += 10;
+
+        // 3. Items Table
+        if (partidas.length > 0) {
+            doc.autoTable({
+                startY: currentY,
+                head: [['Código', 'Descripción', 'Unidad', 'Cantidad', 'P. Unitario', 'Total']],
+                body: partidas.map(p => [
+                    p.code || '-',
+                    p.description || '-',
+                    p.unit || '-',
+                    (p.quantity || 0).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    formatCurrencyForPDF(p.unitPrice || 0, currency),
+                    formatCurrencyForPDF(((p.quantity || 0) * (p.unitPrice || 0)), currency)
+                ]),
+                theme: 'striped',
+                headStyles: {
+                    fillColor: colors.primary,
+                    textColor: colors.white,
+                    fontSize: fonts.small,
+                    fontStyle: 'bold',
+                    halign: 'center'
+                },
+                styles: {
+                    fontSize: fonts.small - 1,
+                    cellPadding: 2
+                },
+                columnStyles: {
+                    0: { cellWidth: 25, fontSize: fonts.small - 1 },
+                    1: { cellWidth: 'auto' },
+                    2: { cellWidth: 15, halign: 'center' },
+                    3: { cellWidth: 20, halign: 'right' },
+                    4: { cellWidth: 25, halign: 'right' },
+                    5: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
+                },
+                didDrawPage: (data: any) => {
+                    addPageFooter(doc, doc.getNumberOfPages());
+                }
+            });
+            currentY = doc.lastAutoTable.finalY + 10;
+        } else {
+            doc.setFontSize(fonts.normal);
+            doc.text('No hay partidas registradas en este presupuesto.', margins.left, currentY + 10);
+            currentY += 20;
         }
-    });
 
-    currentY = doc.lastAutoTable.finalY + 10;
+        // 4. Totals
+        const totalAmount = partidas.reduce((sum, p) => sum + ((p.quantity || 0) * (p.unitPrice || 0)), 0);
+        const ivaAmount = totalAmount * (legalConfig.ivaRate || 0);
+        const totalWithIva = totalAmount + ivaAmount;
 
-    // 4. Totals
-    const totalAmount = partidas.reduce((sum, p) => sum + (p.quantity * p.unitPrice), 0);
-    const ivaAmount = totalAmount * project.legalConfig.ivaRate;
-    const totalWithIva = totalAmount + ivaAmount;
+        currentY = checkPageBreak(doc, currentY, 50);
 
-    currentY = checkPageBreak(doc, currentY, 50);
+        // Totals Box
+        const boxWidth = 80;
+        const boxX = 210 - margins.right - boxWidth;
 
-    // Totals Box
-    const boxWidth = 80;
-    const boxX = 210 - margins.right - boxWidth;
+        doc.setFillColor(245, 247, 250); // Light gray/blue
+        doc.rect(boxX, currentY, boxWidth, 35, 'F');
+        doc.setDrawColor(...colors.medium);
+        doc.rect(boxX, currentY, boxWidth, 35, 'S');
 
-    doc.setFillColor(245, 247, 250); // Light gray/blue
-    doc.rect(boxX, currentY, boxWidth, 35, 'F');
-    doc.setDrawColor(...colors.medium);
-    doc.rect(boxX, currentY, boxWidth, 35, 'S');
+        let totalY = currentY + 8;
+        const labelX = boxX + 5;
+        const valueX = 210 - margins.right - 5;
 
-    let totalY = currentY + 8;
-    const labelX = boxX + 5;
-    const valueX = 210 - margins.right - 5;
+        doc.setFontSize(fonts.normal);
 
-    doc.setFontSize(fonts.normal);
+        // Subtotal
+        doc.setFont('helvetica', 'bold');
+        doc.text('SUBTOTAL:', labelX, totalY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formatCurrencyForPDF(totalAmount, currency), valueX, totalY, { align: 'right' });
 
-    // Subtotal
-    doc.setFont('helvetica', 'bold');
-    doc.text('SUBTOTAL:', labelX, totalY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formatCurrencyForPDF(totalAmount, currency), valueX, totalY, { align: 'right' });
+        totalY += 8;
 
-    totalY += 8;
+        // IVA
+        doc.setFont('helvetica', 'bold');
+        doc.text(`IVA (${((legalConfig.ivaRate || 0) * 100).toFixed(0)}%):`, labelX, totalY);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formatCurrencyForPDF(ivaAmount, currency), valueX, totalY, { align: 'right' });
 
-    // IVA
-    doc.setFont('helvetica', 'bold');
-    doc.text(`IVA (${(project.legalConfig.ivaRate * 100).toFixed(0)}%):`, labelX, totalY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formatCurrencyForPDF(ivaAmount, currency), valueX, totalY, { align: 'right' });
-
-    totalY += 10;
-
-    // Total
-    doc.setFontSize(fonts.heading);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...colors.primary);
-    doc.text('TOTAL GENERAL:', labelX, totalY);
-    doc.text(formatCurrencyForPDF(totalWithIva, currency), valueX, totalY, { align: 'right' });
-
-    // Exchange rate note
-    if (currency === 'USD' && project.contract.exchangeRate) {
         totalY += 10;
-        doc.setFontSize(fonts.small);
-        doc.setTextColor(100, 100, 100);
-        doc.setFont('helvetica', 'italic');
-        doc.text(`Tasa de cambio: Bs. ${project.contract.exchangeRate.toFixed(2)}`, valueX, totalY, { align: 'right' });
-    }
 
-    doc.save(filename);
+        // Total
+        doc.setFontSize(fonts.heading);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
+        doc.text('TOTAL GENERAL:', labelX, totalY);
+        doc.text(formatCurrencyForPDF(totalWithIva, currency), valueX, totalY, { align: 'right' });
+
+        // Exchange rate note
+        if (currency === 'USD' && project.contract.exchangeRate) {
+            totalY += 10;
+            doc.setFontSize(fonts.small);
+            doc.setTextColor(100, 100, 100);
+            doc.setFont('helvetica', 'italic');
+            doc.text(`Tasa de cambio: Bs. ${project.contract.exchangeRate.toFixed(2)}`, valueX, totalY, { align: 'right' });
+        }
+
+        doc.save(filename);
+    } catch (error) {
+        console.error("Error generating budget PDF:", error);
+        alert("Hubo un error al generar el PDF. Revisa la consola para más detalles.");
+    }
 };
