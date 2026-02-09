@@ -134,7 +134,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.name ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.name ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                     placeholder="Torre Residencial A"
                                 />
@@ -149,7 +149,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="code"
                                     value={formData.code}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.code ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.code ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                     placeholder="PROJ-2024-001"
                                 />
@@ -171,7 +171,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="clientName"
                                     value={formData.clientName}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.clientName ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.clientName ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                     placeholder="Constructora XYZ C.A."
                                 />
@@ -186,7 +186,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="clientRIF"
                                     value={formData.clientRIF}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.clientRIF ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.clientRIF ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                     placeholder="J-123456789"
                                 />
@@ -201,7 +201,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="clientAddress"
                                     value={formData.clientAddress}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
                                     placeholder="Av. Principal, Caracas"
                                 />
                             </div>
@@ -221,7 +221,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="contractorName"
                                     value={formData.contractorName}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.contractorName ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.contractorName ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                     placeholder="Mi Empresa C.A."
                                 />
@@ -236,7 +236,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="contractorRIF"
                                     value={formData.contractorRIF}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.contractorRIF ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.contractorRIF ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                     placeholder="J-987654321"
                                 />
@@ -258,7 +258,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="contractNumber"
                                     value={formData.contractNumber}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.contractNumber ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.contractNumber ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                     placeholder="CT-2024-001"
                                 />
@@ -273,7 +273,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="contractDate"
                                     value={formData.contractDate}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
                                 />
                             </div>
                             <div>
@@ -284,7 +284,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="currency"
                                     value={formData.currency}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
                                 >
                                     <option value="USD">Dólares (USD)</option>
                                     <option value="VES">Bolívares (VES)</option>
@@ -300,7 +300,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     value={formData.contractAmount}
                                     onChange={handleChange}
                                     step="0.01"
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.contractAmount ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.contractAmount ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                     placeholder="500000.00"
                                 />
@@ -317,7 +317,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                         value={formData.exchangeRate}
                                         onChange={handleChange}
                                         step="0.01"
-                                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.exchangeRate ? 'border-red-500' : 'border-slate-300'
+                                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.exchangeRate ? 'border-red-500' : 'border-slate-300'
                                             }`}
                                         placeholder="36.50"
                                     />
@@ -343,7 +343,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="state"
                                     value={formData.state}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
                                     placeholder="Miranda"
                                 />
                             </div>
@@ -356,7 +356,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="city"
                                     value={formData.city}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
                                     placeholder="Caracas"
                                 />
                             </div>
@@ -369,7 +369,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="address"
                                     value={formData.address}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
                                     placeholder="Av. Principal, Sector X"
                                 />
                             </div>
@@ -382,7 +382,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="startDate"
                                     value={formData.startDate}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
                                 />
                             </div>
                             <div>
@@ -394,7 +394,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="estimatedEndDate"
                                     value={formData.estimatedEndDate}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
                                 />
                             </div>
                         </div>
