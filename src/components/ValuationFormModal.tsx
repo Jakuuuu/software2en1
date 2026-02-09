@@ -87,6 +87,7 @@ export default function ValuationFormModal({
     const grossAmount = progress.reduce((sum, p) => sum + (p.thisValuation * p.unitPrice), 0);
 
     const legalConfig = project.legalConfig || DEFAULT_LEGAL_CONFIG;
+    const currency = project.contract?.currency || 'USD';
 
     // Calculate potential amortization (same % as advance payment)
     const potentialAmortization = grossAmount * legalConfig.advancePayment;
@@ -158,7 +159,7 @@ export default function ValuationFormModal({
                 guaranteeFund
             },
             netAmount,
-            currency: project.contract.currency
+            currency: currency
         };
 
         onSave(valuation);
@@ -309,7 +310,7 @@ export default function ValuationFormModal({
                                                     </td>
                                                     <td className="p-3 text-right">
                                                         <span className={hasProgress ? 'font-bold text-emerald-600' : 'text-slate-600'}>
-                                                            {formatCurrency(amount, project.contract.currency)}
+                                                            {formatCurrency(amount, currency)}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -328,7 +329,7 @@ export default function ValuationFormModal({
                             <div className="flex justify-between items-center">
                                 <span className="text-slate-700">Monto Bruto:</span>
                                 <span className="font-bold text-lg text-slate-800">
-                                    {formatCurrency(grossAmount, project.contract.currency)}
+                                    {formatCurrency(grossAmount, currency)}
                                 </span>
                             </div>
 
@@ -340,7 +341,7 @@ export default function ValuationFormModal({
                                             (-) Amortización Anticipo ({(legalConfig.advancePayment * 100).toFixed(1)}%):
                                         </span>
                                         <span className="font-semibold text-red-600">
-                                            -{formatCurrency(advancePaymentDeduction, project.contract.currency)}
+                                            -{formatCurrency(advancePaymentDeduction, currency)}
                                         </span>
                                     </div>
                                 )}
@@ -352,7 +353,7 @@ export default function ValuationFormModal({
                                                 (+) IVA ({(legalConfig.ivaRate * 100).toFixed(0)}%):
                                             </span>
                                             <span className="font-semibold text-emerald-600">
-                                                +{formatCurrency(ivaAmount, project.contract.currency)}
+                                                +{formatCurrency(ivaAmount, currency)}
                                             </span>
                                         </div>
                                         {ivaRetention > 0 && (
@@ -361,7 +362,7 @@ export default function ValuationFormModal({
                                                     (-) Retención IVA ({(legalConfig.retentionIVA * 100).toFixed(0)}%):
                                                 </span>
                                                 <span className="font-semibold text-red-600">
-                                                    -{formatCurrency(ivaRetention, project.contract.currency)}
+                                                    -{formatCurrency(ivaRetention, currency)}
                                                 </span>
                                             </div>
                                         )}
@@ -374,7 +375,7 @@ export default function ValuationFormModal({
                                             (-) Retención ISLR ({(legalConfig.retentionISLR * 100).toFixed(1)}%):
                                         </span>
                                         <span className="font-semibold text-red-600">
-                                            -{formatCurrency(islrRetention, project.contract.currency)}
+                                            -{formatCurrency(islrRetention, currency)}
                                         </span>
                                     </div>
                                 )}
@@ -385,7 +386,7 @@ export default function ValuationFormModal({
                                             (-) Fondo de Garantía ({(legalConfig.performanceBond * 100).toFixed(1)}%):
                                         </span>
                                         <span className="font-semibold text-red-600">
-                                            -{formatCurrency(guaranteeFund, project.contract.currency)}
+                                            -{formatCurrency(guaranteeFund, currency)}
                                         </span>
                                     </div>
                                 )}
@@ -395,7 +396,7 @@ export default function ValuationFormModal({
                             <div className="border-t-2 border-emerald-300 pt-3 flex justify-between items-center">
                                 <span className="font-bold text-slate-800 text-lg">MONTO NETO A PAGAR:</span>
                                 <span className="font-bold text-2xl text-emerald-600">
-                                    {formatCurrency(netAmount, project.contract.currency)}
+                                    {formatCurrency(netAmount, currency)}
                                 </span>
                             </div>
                         </div>
