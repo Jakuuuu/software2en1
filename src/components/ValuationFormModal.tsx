@@ -301,14 +301,14 @@ export default function ValuationFormModal({
                                                         <span className="text-slate-600">{p.unit}</span>
                                                     </td>
                                                     <td className="p-3 text-right text-slate-600">
-                                                        {p.contracted.toFixed(2)}
+                                                        {(p.contracted || 0).toFixed(2)}
                                                     </td>
                                                     <td className="p-3 text-right text-slate-600">
-                                                        {p.previousAccumulated.toFixed(2)}
+                                                        {(p.previousAccumulated || 0).toFixed(2)}
                                                     </td>
                                                     <td className="p-3 text-right">
                                                         <span className={p.remaining > 0 ? 'text-amber-600 font-medium' : 'text-slate-400'}>
-                                                            {p.remaining.toFixed(2)}
+                                                            {(p.remaining || 0).toFixed(2)}
                                                         </span>
                                                     </td>
                                                     <td className="p-3">
