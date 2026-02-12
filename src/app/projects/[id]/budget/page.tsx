@@ -7,10 +7,13 @@ import { ArrowLeft, Plus, Pencil, Trash2, ChevronDown, ChevronRight, FileDown, C
 import { Partida, Resource, PartidaFormData, Project } from '@/types';
 import { generatePartidaPDF, generateBudgetPDF } from '@/utils/pdfGenerator';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import PartidaFormModal from '@/components/PartidaFormModal';
+import { APUEditor } from '@/components/APUEditor';
 import { useProjects, usePartidas, DEFAULT_LEGAL_CONFIG } from '@/hooks/useData';
 import { formatCurrency } from '@/utils/currency';
 import { calculateUnitPrice } from '@/utils/calculations';
+import { EmptyState } from '@/components/EmptyState';
+import { QuickActions } from '@/components/QuickActions';
+import { useToast } from '@/components/Toast';
 
 export default function ProjectBudgetPage() {
     const params = useParams();
@@ -22,8 +25,9 @@ export default function ProjectBudgetPage() {
 
     const [project, setProject] = useState<Project | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [showPartidaModal, setShowPartidaModal] = useState(false);
     const [editingPartida, setEditingPartida] = useState<Partida | null>(null);
+
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (!projectsLoading) {
@@ -54,94 +58,60 @@ export default function ProjectBudgetPage() {
     const calculateTotal = (resources: Resource[]) => resources.reduce((acc, curr) => acc + curr.total, 0);
 
     const handleNewPartida = () => {
-        setEditingPartida(null);
-        setShowPartidaModal(true);
+        // Create a temporary partida for APUEditor
+        const tempPartida: Partida = {
+            id: 'temp-' + Math.random().toString(36).substr(2, 9),
+            code: '',
+            description: '',
+            unit: 'm2',
+            quantity: 1,
+            unitPrice: 0,
+            contracted: 0,
+            previousAccumulated: 0,
+            thisValuation: 0,
+            apu: {
+                materials: [],
+                equipment: [],
+                labor: [],
+                subtotals: { materials: 0, equipment: 0, labor: 0 },
+                legalCharges: { lopcymat: 0, inces: 0, sso: 0 },
+                directCost: 0,
+                indirectCosts: { administration: 0, utilities: 0, profit: 0, total: 0 },
+                unitPrice: 0
+            }
+        };
+        setEditingPartida(tempPartida);
     };
 
     const handleEditPartida = (partida: Partida) => {
         setEditingPartida(partida);
-        setShowPartidaModal(true);
+    };
+
+    const handleSaveAPU = (updatedPartida: Partida) => {
+        if (updatedPartida.id.startsWith('temp-')) {
+            // New partida
+            const newPartida: Partial<Partida> = {
+                ...updatedPartida,
+                id: undefined, // Remove temp ID so addPartida creates a real one
+            };
+            addPartida(newPartida as Omit<Partida, 'id' | 'createdAt' | 'updatedAt'>);
+            showToast('success', 'Partida creada correctamente');
+        } else {
+            // Existing partida
+            updatePartida(updatedPartida.id, updatedPartida);
+            showToast('success', 'APU actualizado correctamente');
+        }
+        setEditingPartida(null);
     };
 
     const handleDeletePartida = (id: string) => {
         if (confirm('¿Estás seguro de eliminar esta partida?')) {
             deletePartida(id);
+            showToast('success', 'Partida eliminada correctamente');
         }
     };
 
-    const handleSavePartida = (data: PartidaFormData) => {
-        // Optimistic UI: Close modal immediately
-        setShowPartidaModal(false);
-        setEditingPartida(null);
 
-        console.log("Saving Partida Data:", data);
-
-        // Prepare resources with totals
-        const materials = data.materials.map(m => ({
-            ...m,
-            total: m.quantity * m.unitPrice
-        }));
-        const equipment = data.equipment.map(e => ({
-            ...e,
-            total: e.quantity * e.unitPrice
-        }));
-        const labor = data.labor.map(l => ({
-            ...l,
-            total: l.quantity * l.unitPrice
-        }));
-
-        // Calculate Unit Price and APU details
-        const config = project?.legalConfig || DEFAULT_LEGAL_CONFIG;
-        console.log("Using Config:", config);
-
-        const calc = calculateUnitPrice(materials, equipment, labor, config);
-        console.log("Calculation Result:", calc);
-
-        // Construct APU object
-        const apu = {
-            materials,
-            equipment,
-            labor,
-            subtotals: {
-                materials: calc.breakdown.materials + calc.breakdown.lopcymat, // Include LOPCYMAT in total materials cost for simplicity
-                equipment: calc.breakdown.equipment,
-                labor: calc.breakdown.labor + calc.breakdown.socialCharges // Include Social Charges in total labor cost
-            },
-            legalCharges: {
-                lopcymat: calc.breakdown.lopcymat,
-                inces: 0,
-                sso: 0
-            },
-            directCost: calc.directCost,
-            indirectCosts: {
-                administration: calc.breakdown.administration,
-                utilities: calc.breakdown.utilities,
-                profit: calc.breakdown.profit,
-                total: calc.indirectCosts
-            },
-            unitPrice: calc.unitPrice
-        };
-
-        const newPartida: Partial<Partida> = {
-            code: data.code,
-            description: data.description,
-            unit: data.unit,
-            quantity: data.quantity,
-            unitPrice: calc.unitPrice,
-            contracted: data.quantity * calc.unitPrice,
-            previousAccumulated: 0,
-            thisValuation: 0,
-            apu: apu as any
-        };
-
-        console.log("New Partida Object:", newPartida);
-
-        if (editingPartida) {
-            updatePartida(editingPartida.id, newPartida);
-        } else {
-            addPartida(newPartida as Omit<Partida, 'id' | 'createdAt' | 'updatedAt'>);
-        }
-    };
 
     const totalBudget = partidas.reduce((sum, p) => sum + (p.contracted || 0), 0);
 
@@ -215,18 +185,17 @@ export default function ProjectBudgetPage() {
 
                 {/* Partidas List */}
                 {partidas.length === 0 ? (
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-                        <Calculator size={48} className="text-slate-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-slate-700 mb-2">No hay partidas aún</h3>
-                        <p className="text-slate-500 mb-6">Comienza agregando la primera partida con su APU</p>
-                        <button
-                            onClick={handleNewPartida}
-                            className="px-5 py-2.5 bg-indigo-600 rounded-lg font-medium text-white hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
-                        >
-                            <Plus size={18} />
-                            Crear Primera Partida
-                        </button>
-                    </div>
+                    <EmptyState
+                        icon={Calculator}
+                        title="No hay partidas aún"
+                        description="Comienza agregando la primera partida con su análisis de precios unitarios (APU) para crear tu presupuesto."
+                        primaryAction={{
+                            label: "Crear Primera Partida",
+                            onClick: handleNewPartida
+                        }}
+                        iconColor="text-indigo-600"
+                        iconBgColor="bg-indigo-100"
+                    />
                 ) : (
                     <div className="space-y-4">
                         {partidas.map((item) => (
@@ -341,41 +310,17 @@ export default function ProjectBudgetPage() {
                 </div>
             </main>
 
-            {/* Partida Form Modal */}
-            {showPartidaModal && (
-                <PartidaFormModal
-                    projectId={projectId}
-                    onClose={() => {
-                        setShowPartidaModal(false);
-                        setEditingPartida(null);
-                    }}
-                    onSave={handleSavePartida}
-                    initialData={editingPartida ? {
-                        code: editingPartida.code,
-                        description: editingPartida.description,
-                        unit: editingPartida.unit,
-                        quantity: editingPartida.quantity,
-                        materials: editingPartida.apu?.materials.map(m => ({
-                            description: m.description,
-                            unit: m.unit,
-                            quantity: m.quantity,
-                            unitPrice: m.unitPrice
-                        })) || [],
-                        equipment: editingPartida.apu?.equipment.map(e => ({
-                            description: e.description,
-                            unit: e.unit,
-                            quantity: e.quantity,
-                            unitPrice: e.unitPrice
-                        })) || [],
-                        labor: editingPartida.apu?.labor.map(l => ({
-                            description: l.description,
-                            unit: l.unit,
-                            quantity: l.quantity,
-                            unitPrice: l.unitPrice
-                        })) || []
-                    } : undefined}
+            {/* APU Editor Modal */}
+            {editingPartida && (
+                <APUEditor
+                    partida={editingPartida}
+                    onSave={handleSaveAPU}
+                    onClose={() => setEditingPartida(null)}
                 />
             )}
+
+            {/* Quick Actions FAB */}
+            <QuickActions projectId={projectId} currentPage="budget" />
         </div>
     );
 }

@@ -16,11 +16,14 @@ import {
     Edit,
     CheckCircle2,
     Clock,
-    AlertCircle
+    AlertCircle,
+    Plus
 } from 'lucide-react';
-import { useProjects, usePartidas } from '@/hooks/useData';
+import { useProjects, usePartidas, useValuations } from '@/hooks/useData';
 import { formatCurrency } from '@/utils/currency';
 import { Project } from '@/types';
+import { FlowProgress, useFlowStatus } from '@/components/FlowProgress';
+import { QuickActions } from '@/components/QuickActions';
 
 export default function ProjectDashboard() {
     const params = useParams();
@@ -29,9 +32,12 @@ export default function ProjectDashboard() {
 
     const { getProject } = useProjects();
     const { partidas } = usePartidas(projectId);
+    const { valuations } = useValuations(projectId);
 
     const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const flowStatus = useFlowStatus(partidas.length, valuations.length);
 
     useEffect(() => {
         const proj = getProject(projectId);
@@ -259,6 +265,69 @@ export default function ProjectDashboard() {
                     </div>
                 </div>
 
+                {/* Flow Progress & Next Steps */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {/* Flow Progress */}
+                    <FlowProgress steps={flowStatus} />
+
+                    {/* Next Steps Widget */}
+                    <div className="md:col-span-2 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl shadow-sm border border-indigo-200 p-6">
+                        <h3 className="text-lg font-semibold text-indigo-900 mb-4">
+                            💡 Próximos Pasos Sugeridos
+                        </h3>
+                        {partidas.length === 0 ? (
+                            <div className="space-y-3">
+                                <p className="text-indigo-800 text-sm">
+                                    Para comenzar con tu proyecto, necesitas crear partidas en el presupuesto.
+                                </p>
+                                <Link
+                                    href={`/projects/${projectId}/budget`}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                                >
+                                    <Plus size={18} />
+                                    Crear Primera Partida
+                                </Link>
+                            </div>
+                        ) : valuations.length === 0 ? (
+                            <div className="space-y-3">
+                                <p className="text-indigo-800 text-sm">
+                                    ✅ Tienes {partidas.length} partida{partidas.length !== 1 ? 's' : ''} en tu presupuesto.
+                                    El siguiente paso es crear valuaciones para registrar avances de obra.
+                                </p>
+                                <Link
+                                    href={`/projects/${projectId}/valuations`}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+                                >
+                                    <Plus size={18} />
+                                    Crear Primera Valuación
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                <p className="text-indigo-800 text-sm">
+                                    ✅ Tu proyecto está completamente configurado con {partidas.length} partida{partidas.length !== 1 ? 's' : ''} y {valuations.length} valuación{valuations.length !== 1 ? 'es' : ''}.
+                                </p>
+                                <div className="flex gap-3">
+                                    <Link
+                                        href={`/projects/${projectId}/valuations`}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+                                    >
+                                        <ClipboardList size={18} />
+                                        Ver Valuaciones
+                                    </Link>
+                                    <Link
+                                        href={`/projects/${projectId}/budget`}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-indigo-300 text-indigo-700 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
+                                    >
+                                        <Calculator size={18} />
+                                        Ver Presupuesto
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Quick Actions */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <Link
@@ -367,6 +436,9 @@ export default function ProjectDashboard() {
                     </div>
                 )}
             </main>
+
+            {/* Quick Actions FAB */}
+            <QuickActions projectId={projectId} currentPage="dashboard" />
         </div>
     );
 }

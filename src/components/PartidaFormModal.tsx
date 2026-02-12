@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, Calculator } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { X, Plus, Trash2, Calculator, Users } from 'lucide-react';
 import { ResourceInput, LaborInput, PartidaFormData, Resource, LaborResource } from '@/types';
 import { calculateUnitPrice } from '@/utils/calculations';
 import { useProjectConfig } from '@/hooks/useData';
+import { useSocket } from '@/context/SocketContext';
+import CoveninAutocomplete from './CoveninAutocomplete';
+import { CoveninPartida } from '@/hooks/useCoveninSearch';
 
 interface PartidaFormModalProps {
     projectId: string;
@@ -15,6 +18,7 @@ interface PartidaFormModalProps {
 
 export default function PartidaFormModal({ projectId, onClose, onSave, initialData }: PartidaFormModalProps) {
     const config = useProjectConfig(projectId);
+    const { isConnected, joinPartida, leavePartida, updatePartida, onPartidaUpdate, onUserJoined, onUserLeft } = useSocket();
 
     const [formData, setFormData] = useState<PartidaFormData>({
         code: initialData?.code || '',
@@ -28,6 +32,68 @@ export default function PartidaFormModal({ projectId, onClose, onSave, initialDa
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [calculations, setCalculations] = useState<any>(null);
+    const [activeUsers, setActiveUsers] = useState<string[]>([]);
+    const [lastUpdatedBy, setLastUpdatedBy] = useState<string>('');
+    const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isRemoteUpdate = useRef(false);
+
+    // Get a unique user identifier (in production, use actual user from auth)
+    const currentUser = useRef(`User-${Math.random().toString(36).substr(2, 4)}`).current;
+    const partidaId = initialData?.code || 'new';
+
+    // WebSocket: Join room on mount, leave on unmount
+    useEffect(() => {
+        if (isConnected && partidaId) {
+            joinPartida(partidaId, currentUser);
+        }
+
+        return () => {
+            if (partidaId) {
+                leavePartida(partidaId, currentUser);
+            }
+        };
+    }, [isConnected, partidaId]);
+
+    // WebSocket: Listen for remote updates
+    useEffect(() => {
+        onPartidaUpdate(({ data, updatedBy }) => {
+            if (updatedBy !== currentUser) {
+                isRemoteUpdate.current = true;
+                setFormData(data);
+                setLastUpdatedBy(updatedBy);
+                setTimeout(() => setLastUpdatedBy(''), 3000);
+            }
+        });
+
+        onUserJoined(({ userName }) => {
+            setActiveUsers(prev => [...prev, userName]);
+        });
+
+        onUserLeft(({ userName }) => {
+            setActiveUsers(prev => prev.filter(u => u !== userName));
+        });
+    }, []);
+
+    // Debounced broadcast of local changes
+    const broadcastUpdate = useCallback(() => {
+        if (!isRemoteUpdate.current && isConnected) {
+            updatePartida(partidaId, formData, currentUser);
+        }
+        isRemoteUpdate.current = false;
+    }, [formData, isConnected, partidaId]);
+
+    useEffect(() => {
+        if (updateTimeoutRef.current) {
+            clearTimeout(updateTimeoutRef.current);
+        }
+        updateTimeoutRef.current = setTimeout(broadcastUpdate, 500);
+
+        return () => {
+            if (updateTimeoutRef.current) {
+                clearTimeout(updateTimeoutRef.current);
+            }
+        };
+    }, [formData, broadcastUpdate]);
 
     // Recalculate when resources change
     useEffect(() => {
@@ -147,22 +213,43 @@ export default function PartidaFormModal({ projectId, onClose, onSave, initialDa
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-y-auto">
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center z-10">
-                    <div>
-                        <h2 className="text-2xl font-bold text-slate-800">
-                            {initialData ? 'Editar Partida' : 'Nueva Partida'}
-                        </h2>
+                <div className="sticky top-0 bg-white border-b border-slate-200 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 z-10">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-2xl font-bold text-slate-800">
+                                {initialData ? 'Editar Partida' : 'Nueva Partida'}
+                            </h2>
+                            {isConnected && (
+                                <span className="flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                                    <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                                    En Vivo
+                                </span>
+                            )}
+                        </div>
                         <p className="text-sm text-slate-500">Análisis de Precio Unitario (APU)</p>
+                        {lastUpdatedBy && (
+                            <p className="text-xs text-amber-600 mt-1 italic">
+                                ✏️ {lastUpdatedBy} actualizó este formulario
+                            </p>
+                        )}
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                    >
-                        <X size={24} />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {activeUsers.length > 0 && (
+                            <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg">
+                                <Users size={16} />
+                                <span>{activeUsers.length} editando</span>
+                            </div>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                        >
+                            <X size={24} />
+                        </button>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-6">
@@ -174,16 +261,19 @@ export default function PartidaFormModal({ projectId, onClose, onSave, initialDa
                                 <label className="block text-sm font-medium text-slate-700 mb-1">
                                     Código COVENIN *
                                 </label>
-                                <input
-                                    type="text"
-                                    name="code"
+                                <CoveninAutocomplete
                                     value={formData.code}
-                                    onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 ${errors.code ? 'border-red-500' : 'border-slate-300'
-                                        }`}
-                                    placeholder="E-411.110.120"
+                                    onChange={(value) => setFormData(prev => ({ ...prev, code: value }))}
+                                    onSelect={(partida: CoveninPartida) => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            code: partida.codigo,
+                                            description: partida.descripcion,
+                                            unit: partida.unidad as any
+                                        }));
+                                    }}
+                                    error={errors.code}
                                 />
-                                {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">

@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Project, Partida, LegalConfig } from '../types';
+import { Project, Partida, LegalConfig, Valuation } from '../types';
 
 // ============================================
 // DEFAULT LEGAL CONFIG FOR VENEZUELA
@@ -193,8 +193,6 @@ export const useProjectConfig = (projectId: string | undefined) => {
 // useValuations Hook
 // ============================================
 
-import { Valuation } from '../types';
-
 const VALUATIONS_KEY_PREFIX = '2en1apu-valuations-';
 
 export const useValuations = (projectId: string) => {
@@ -256,5 +254,51 @@ export const useValuations = (projectId: string) => {
         updateValuation,
         deleteValuation,
         getValuation
+    };
+};
+
+// ============================================
+// useLibrary Hook
+// ============================================
+
+const LIBRARY_KEY = '2en1apu-library';
+
+export const useLibrary = () => {
+    const [library, setLibrary] = useState<Partida[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    // Load form localStorage
+    useEffect(() => {
+        const stored = localStorage.getItem(LIBRARY_KEY);
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                setLibrary(parsed);
+            } catch (error) {
+                console.error('Error loading library:', error);
+            }
+        }
+        setLoading(false);
+    }, []);
+
+    const saveLibrary = (newLibrary: Partida[]) => {
+        localStorage.setItem(LIBRARY_KEY, JSON.stringify(newLibrary));
+        setLibrary(newLibrary);
+    };
+
+    const addToLibrary = (newPartidas: Partida[]) => {
+        const updated = [...library, ...newPartidas];
+        saveLibrary(updated);
+    };
+
+    const clearLibrary = () => {
+        saveLibrary([]);
+    };
+
+    return {
+        library,
+        loading,
+        addToLibrary,
+        clearLibrary
     };
 };

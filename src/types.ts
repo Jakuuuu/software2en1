@@ -242,5 +242,36 @@ export interface PartidaFormData {
     quantity: number;
     materials: ResourceInput[];
     equipment: ResourceInput[];
-    labor: ResourceInput[]; // Simplified to ResourceInput[] for compatibility
+    labor: LaborInput[]; // Simplified to ResourceInput[] for compatibility
+}
+
+export interface APUResponse {
+    codigo_covenin: string;
+    descripcion: string;
+    unidad: string;
+    analisis_costos: {
+        materiales: { descripcion: string; unidad: string; cantidad: number; precio_unitario: number; total: number }[];
+        equipos: { descripcion: string; unidad: string; cantidad: number; precio_unitario: number; total: number }[];
+        mano_obra: { descripcion: string; cantidad: number; precio_unitario: number; total: number }[];
+    };
+    costos_directos: {
+        total_materiales: number;
+        total_equipos: number;
+        total_mano_obra: number;
+        subtotal_directo: number;
+    };
+    incidencias: {
+        laborales: { concepto: string; porcentaje: number; monto: number; base_legal?: string }[];
+        total_incidencias: number;
+    };
+    resumen: {
+        costo_directo_total: number;
+        costos_administrativos: number;
+        utilidad: number;
+        precio_unitario: number;
+    };
+    certificacion_legal?: {
+        marco_normativo: string[];
+        fecha: string;
+    };
 }

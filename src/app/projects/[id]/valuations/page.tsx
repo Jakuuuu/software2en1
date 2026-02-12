@@ -10,7 +10,10 @@ import { formatCurrency } from '@/utils/currency';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import ValuationFormModal from '@/components/ValuationFormModal';
 import { generateValuationPDF } from '@/utils/pdfGenerator';
-import { generateValuationCSV } from '@/utils/csvGenerator';
+import { generateValuationExcel } from '@/utils/excelGenerator';
+import { EmptyState } from '@/components/EmptyState';
+import { QuickActions } from '@/components/QuickActions';
+import { useToast } from '@/components/Toast';
 
 export default function ProjectValuationsPage() {
     const params = useParams();
@@ -23,6 +26,8 @@ export default function ProjectValuationsPage() {
 
     const [project, setProject] = useState<Project | null>(null);
     const [showValuationModal, setShowValuationModal] = useState(false);
+
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (!projectsLoading) {
@@ -81,6 +86,7 @@ export default function ProjectValuationsPage() {
         });
 
         setShowValuationModal(false);
+        showToast('success', 'Valuación creada correctamente');
     };
 
     const handleDownloadPDF = (valuation: Valuation) => {
@@ -94,14 +100,15 @@ export default function ProjectValuationsPage() {
         generateValuationPDF(valuation, project, valuationPartidas);
     };
 
-    const handleDownloadCSV = (valuation: Valuation) => {
+    const handleDownloadExcel = async (valuation: Valuation) => {
         if (!project) return;
 
         const valuationPartidas = valuation.items
             .map(item => partidas.find(p => p.id === item.partidaId))
             .filter(Boolean) as typeof partidas;
 
-        generateValuationCSV(valuation, project, valuationPartidas);
+        await generateValuationExcel(valuation, project, valuationPartidas);
+        showToast('success', 'Excel con fórmulas generado (Auditoría PDVSA)');
     };
 
     return (
@@ -192,21 +199,29 @@ export default function ProjectValuationsPage() {
 
                 {/* Valuations List */}
                 {valuations.length === 0 ? (
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-                        <FileText size={48} className="text-slate-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-slate-700 mb-2">No hay valuaciones aún</h3>
-                        <p className="text-slate-500 mb-6">
-                            Crea tu primera valuación para registrar el avance de obra
-                        </p>
-                        <button
-                            onClick={() => setShowValuationModal(true)}
-                            disabled={partidas.length === 0}
-                            className="px-5 py-2.5 bg-emerald-600 rounded-lg font-medium text-white hover:bg-emerald-700 transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Plus size={18} />
-                            Crear Primera Valuación
-                        </button>
-                    </div>
+                    <EmptyState
+                        icon={FileText}
+                        title="No hay valuaciones aún"
+                        description={partidas.length === 0
+                            ? "Primero necesitas crear partidas en el presupuesto antes de generar valuaciones."
+                            : "Crea tu primera valuación para registrar el avance de obra y calcular pagos."}
+                        primaryAction={partidas.length > 0 ? {
+                            label: "Crear Primera Valuación",
+                            onClick: () => setShowValuationModal(true)
+                        } : {
+                            label: "Ir al Presupuesto",
+                            onClick: () => router.push(`/projects/${projectId}/budget`)
+                        }}
+                        secondaryAction={partidas.length === 0 ? {
+                            label: "Ver Tutorial",
+                            onClick: () => {
+                                // Could trigger onboarding tour here
+                                showToast('info', 'Tutorial próximamente disponible');
+                            }
+                        } : undefined}
+                        iconColor="text-emerald-600"
+                        iconBgColor="bg-emerald-100"
+                    />
                 ) : (
                     <div className="space-y-4">
                         {valuations.map((valuation) => (
@@ -249,9 +264,9 @@ export default function ProjectValuationsPage() {
                                             <Eye size={18} />
                                         </button>
                                         <button
-                                            onClick={() => handleDownloadCSV(valuation)}
+                                            onClick={() => handleDownloadExcel(valuation)}
                                             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                            title="Descargar Excel (CSV)"
+                                            title="Descargar Excel con Fórmulas (Auditoría)"
                                         >
                                             <FileText size={18} />
                                         </button>
