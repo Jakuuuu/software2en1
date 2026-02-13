@@ -10,8 +10,6 @@ export default function Navbar() {
     const navLinks = [
         { href: '/', label: 'Inicio', icon: Home },
         { href: '/projects', label: 'Proyectos', icon: Briefcase },
-        { href: '/budget', label: 'Presupuesto', icon: Calculator },
-        { href: '/valuations', label: 'Valuaciones', icon: FileText },
     ];
 
     return (

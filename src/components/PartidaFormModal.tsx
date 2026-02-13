@@ -695,7 +695,7 @@ export default function PartidaFormModal({ projectId, onClose, onSave, initialDa
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-6 py-2.5 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
+                            className="px-6 py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg font-medium transition-colors"
                         >
                             Cancelar
                         </button>

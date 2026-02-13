@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useProjects, DEFAULT_LEGAL_CONFIG } from '@/hooks/useData';
 import { Currency } from '@/types';
 import { X } from 'lucide-react';
@@ -11,6 +12,7 @@ interface ProjectFormModalProps {
 }
 
 export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModalProps) {
+    const router = useRouter();
     const { addProject } = useProjects();
 
     const [formData, setFormData] = useState({
@@ -102,8 +104,9 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
             status: 'planning' as const
         };
 
-        addProject(newProject);
+        const createdProject = addProject(newProject);
         onSuccess();
+        router.push(`/projects/${createdProject.id}`);
     };
 
     return (

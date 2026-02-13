@@ -442,13 +442,13 @@ export default function ValuationFormModal({
                     <div className="flex gap-3">
                         <button
                             onClick={onClose}
-                            className="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-100 transition-colors"
+                            className="px-5 py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg font-medium transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={() => handleSubmit('draft')}
-                            className="px-5 py-2.5 bg-slate-600 text-white rounded-lg font-medium hover:bg-slate-700 transition-colors"
+                            className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
                         >
                             Guardar Borrador
                         </button>
