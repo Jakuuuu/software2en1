@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, FileText, Download, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, FileText, Download, Eye, TrendingUp, AlertCircle, Calendar } from 'lucide-react';
 import { Project, Valuation } from '@/types';
 import { useProjects, usePartidas, useValuations } from '@/hooks/useData';
 import { formatCurrency } from '@/utils/currency';
@@ -14,6 +14,9 @@ import { generateValuationExcel } from '@/utils/excelGenerator';
 import { EmptyState } from '@/components/EmptyState';
 import { QuickActions } from '@/components/QuickActions';
 import { useToast } from '@/components/Toast';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 export default function ProjectValuationsPage() {
     const params = useParams();
@@ -42,10 +45,10 @@ export default function ProjectValuationsPage() {
 
     if (!project) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="min-h-[calc(100vh-64px)] bg-slate-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-slate-600">Cargando proyecto...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-slate-600 font-mono text-sm">LOADING_VALUATIONS...</p>
                 </div>
             </div>
         );
@@ -54,21 +57,6 @@ export default function ProjectValuationsPage() {
     const totalExecuted = partidas.reduce((sum, p) => sum + (p.previousAccumulated || 0) + (p.thisValuation || 0), 0);
     const totalBudget = partidas.reduce((sum, p) => sum + (p.contracted || 0), 0);
     const progress = totalBudget > 0 ? (totalExecuted / totalBudget) * 100 : 0;
-
-    const getStatusBadge = (status: Valuation['status']) => {
-        switch (status) {
-            case 'draft':
-                return <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">📝 Borrador</span>;
-            case 'submitted':
-                return <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">📤 Enviada</span>;
-            case 'approved':
-                return <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">✅ Aprobada</span>;
-            case 'paid':
-                return <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">💰 Pagada</span>;
-            case 'rejected':
-                return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">❌ Rechazada</span>;
-        }
-    };
 
     const handleSaveValuation = (valuation: Omit<Valuation, 'id' | 'createdAt' | 'updatedAt'>) => {
         // Save valuation
@@ -112,90 +100,90 @@ export default function ProjectValuationsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-[calc(100vh-64px)] bg-slate-50 relative">
+            {/* Background Decor */}
+            <div className="absolute inset-0 bg-tech-pattern opacity-30 pointer-events-none"></div>
+
             {/* Navbar */}
-            <nav className="bg-white border-b border-slate-200 px-8 py-4 sticky top-0 z-50 shadow-sm">
+            <nav className="bg-white border-b border-slate-200 px-6 py-3 sticky top-0 z-40 shadow-sm">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link href="/" className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-emerald-200 shadow-lg hover:bg-emerald-700 transition-colors">
-                            A
+                    <div className="flex items-center gap-4">
+                        <Link href={`/projects/${projectId}`}>
+                            <Button variant="ghost" size="icon" className="text-slate-500">
+                                <ArrowLeft size={20} />
+                            </Button>
                         </Link>
                         <div>
-                            <h1 className="text-xl font-bold text-slate-900 leading-none">2 en 1 APU</h1>
-                            <p className="text-xs text-slate-500 mt-1">{project.name}</p>
+                            <div className="flex items-center gap-2 text-xs font-mono text-slate-500 mb-0.5">
+                                <span>PROJECT: {project.code}</span>
+                                <span>/</span>
+                                <span>VALUATIONS</span>
+                            </div>
+                            <h1 className="text-lg font-bold text-slate-900 tracking-tight">{project.name}</h1>
                         </div>
                     </div>
-                    <Link href={`/projects/${projectId}`} className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-slate-100 text-slate-600 font-medium">
-                        <ArrowLeft size={16} /> Volver al Dashboard
-                    </Link>
                 </div>
             </nav>
 
-            <main className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-                <Breadcrumb items={[
-                    { label: 'Proyectos', href: '/projects' },
-                    { label: project.name, href: `/projects/${projectId}` },
-                    { label: 'Valuaciones' }
-                ]} />
-
+            <main className="max-w-7xl mx-auto px-6 py-8 space-y-6 relative z-10">
                 {/* Header with Progress */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <h2 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-                                <FileText className="text-emerald-600" size={32} />
-                                Valuaciones
-                            </h2>
-                            <p className="text-slate-500 mt-2">
-                                {valuations.length} valuaciones | Moneda: {project.contract.currency}
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => setShowValuationModal(true)}
-                            disabled={partidas.length === 0}
-                            className="px-5 py-2.5 bg-emerald-600 rounded-lg font-medium text-white shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Plus size={18} />
-                            Nueva Valuación
-                        </button>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-1">
+                            <TrendingUp className="text-emerald-600" size={24} />
+                            Valuaciones
+                        </h2>
+                        <p className="text-slate-500 text-sm max-w-2xl">
+                            Control de avance de obra y generación de valuaciones para pago.
+                        </p>
                     </div>
+                    <Button
+                        onClick={() => setShowValuationModal(true)}
+                        disabled={partidas.length === 0}
+                        leftIcon={<Plus size={18} />}
+                        className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
+                    >
+                        Nueva Valuación
+                    </Button>
+                </div>
 
-                    {/* Progress Summary */}
-                    <div className="grid grid-cols-4 gap-6 mb-6">
-                        <div className="bg-slate-50 rounded-lg p-4">
-                            <p className="text-xs text-slate-500 mb-1">Monto Contratado</p>
-                            <p className="text-xl font-bold text-slate-800">
+                {/* Progress Summary Card */}
+                <Card className="bg-white/80 backdrop-blur-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Monto Contratado</p>
+                            <p className="text-xl font-bold text-slate-800 font-mono">
                                 {formatCurrency(totalBudget, project.contract.currency)}
                             </p>
                         </div>
-                        <div className="bg-emerald-50 rounded-lg p-4">
-                            <p className="text-xs text-emerald-700 mb-1">Total Ejecutado</p>
-                            <p className="text-xl font-bold text-emerald-600">
+                        <div className="p-4 bg-emerald-50/50 rounded-lg border border-emerald-100">
+                            <p className="text-xs text-emerald-700 uppercase tracking-wider mb-1">Total Ejecutado</p>
+                            <p className="text-xl font-bold text-emerald-600 font-mono">
                                 {formatCurrency(totalExecuted, project.contract.currency)}
                             </p>
                         </div>
-                        <div className="bg-amber-50 rounded-lg p-4">
-                            <p className="text-xs text-amber-700 mb-1">Pendiente</p>
-                            <p className="text-xl font-bold text-amber-600">
+                        <div className="p-4 bg-amber-50/50 rounded-lg border border-amber-100">
+                            <p className="text-xs text-amber-700 uppercase tracking-wider mb-1">Pendiente</p>
+                            <p className="text-xl font-bold text-amber-600 font-mono">
                                 {formatCurrency(totalBudget - totalExecuted, project.contract.currency)}
                             </p>
                         </div>
-                        <div className="bg-indigo-50 rounded-lg p-4">
-                            <p className="text-xs text-indigo-700 mb-1">Progreso</p>
-                            <p className="text-xl font-bold text-indigo-600">
-                                {progress.toFixed(1)}%
-                            </p>
+                        <div className="p-4 bg-white rounded-lg border border-slate-200 shadow-sm relative overflow-hidden">
+                            <div className="relative z-10">
+                                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Progreso Físico</p>
+                                <p className="text-2xl font-bold text-slate-900 font-mono">
+                                    {progress.toFixed(2)}%
+                                </p>
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-slate-100">
+                                <div
+                                    className="h-full bg-emerald-500 transition-all duration-1000 ease-out"
+                                    style={{ width: `${Math.min(progress, 100)}%` }}
+                                />
+                            </div>
                         </div>
                     </div>
-
-                    {/* Progress Bar */}
-                    <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
-                        <div
-                            className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-4 rounded-full transition-all duration-500"
-                            style={{ width: `${Math.min(progress, 100)}%` }}
-                        />
-                    </div>
-                </div>
+                </Card>
 
                 {/* Valuations List */}
                 {valuations.length === 0 ? (
@@ -212,87 +200,93 @@ export default function ProjectValuationsPage() {
                             label: "Ir al Presupuesto",
                             onClick: () => router.push(`/projects/${projectId}/budget`)
                         }}
-                        secondaryAction={partidas.length === 0 ? {
-                            label: "Ver Tutorial",
-                            onClick: () => {
-                                // Could trigger onboarding tour here
-                                showToast('info', 'Tutorial próximamente disponible');
-                            }
-                        } : undefined}
                         iconColor="text-emerald-600"
                         iconBgColor="bg-emerald-100"
                     />
                 ) : (
                     <div className="space-y-4">
                         {valuations.map((valuation) => (
-                            <div key={valuation.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="text-lg font-bold text-slate-800">
-                                                Valuación #{valuation.number}
-                                            </h3>
-                                            {getStatusBadge(valuation.status)}
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-6 mt-4">
-                                            <div>
-                                                <p className="text-xs text-slate-500">Período</p>
-                                                <p className="text-sm font-medium text-slate-700">
-                                                    {new Date(valuation.periodStart).toLocaleDateString('es-VE')} - {new Date(valuation.periodEnd).toLocaleDateString('es-VE')}
-                                                </p>
+                            <Card key={valuation.id} className="hover:border-emerald-200 hover:shadow-md transition-all group" noPadding>
+                                <div className="p-6">
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-lg shadow-sm">
+                                                    #{valuation.number}
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-slate-800">
+                                                        Valuación de Obra
+                                                    </h3>
+                                                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                                                        <Calendar size={12} />
+                                                        <span>
+                                                            {new Date(valuation.periodStart).toLocaleDateString('es-VE')} - {new Date(valuation.periodEnd).toLocaleDateString('es-VE')}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <StatusBadge status={valuation.status} />
                                             </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-8 px-6 border-l border-slate-100">
                                             <div>
-                                                <p className="text-xs text-slate-500">Monto Bruto</p>
-                                                <p className="text-sm font-bold text-emerald-600">
+                                                <p className="text-xs text-slate-400 uppercase tracking-wider mb-0.5">Monto Bruto</p>
+                                                <p className="text-lg font-bold text-slate-700 font-mono">
                                                     {formatCurrency(valuation.grossAmount, project.contract.currency)}
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-xs text-slate-500">Monto Neto</p>
-                                                <p className="text-sm font-bold text-indigo-600">
+                                                <p className="text-xs text-slate-400 uppercase tracking-wider mb-0.5">Monto Neto</p>
+                                                <p className="text-lg font-bold text-emerald-600 font-mono">
                                                     {formatCurrency(valuation.netAmount, project.contract.currency)}
                                                 </p>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 ml-4">
-                                        <button
-                                            onClick={() => router.push(`/projects/${projectId}/valuations/${valuation.id}`)}
-                                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                            title="Ver detalles"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDownloadExcel(valuation)}
-                                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                                            title="Descargar Excel con Fórmulas (Auditoría)"
-                                        >
-                                            <FileText size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDownloadPDF(valuation)}
-                                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                                            title="Descargar PDF"
-                                        >
-                                            <Download size={18} />
-                                        </button>
+
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => router.push(`/projects/${projectId}/valuations/${valuation.id}`)}
+                                            >
+                                                <Eye size={18} className="text-slate-500" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDownloadExcel(valuation)}
+                                            >
+                                                <FileText size={18} className="text-green-600" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDownloadPDF(valuation)}
+                                            >
+                                                <Download size={18} className="text-emerald-600" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </Card>
                         ))}
                     </div>
                 )}
 
-                {/* Info Banner */}
+                {/* Info Alert */}
                 {partidas.length === 0 && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                        <p className="text-sm text-amber-800">
-                            ⚠️ <strong>Atención:</strong> Necesitas crear partidas en el presupuesto antes de poder generar valuaciones.
-                            <Link href={`/projects/${projectId}/budget`} className="ml-2 underline font-medium">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
+                        <AlertCircle className="text-amber-600 mt-0.5" size={18} />
+                        <div>
+                            <p className="text-sm font-bold text-amber-800">Atención requerida</p>
+                            <p className="text-sm text-amber-700 mt-1">
+                                Necesitas crear partidas en el presupuesto antes de poder generar valuaciones.
+                            </p>
+                            <Link href={`/projects/${projectId}/budget`} className="text-sm font-medium text-amber-900 underline mt-2 inline-block hover:text-amber-950">
                                 Ir al Presupuesto →
                             </Link>
-                        </p>
+                        </div>
                     </div>
                 )}
             </main>
@@ -308,6 +302,9 @@ export default function ProjectValuationsPage() {
                     existingValuations={valuations}
                 />
             )}
+
+            {/* Quick Actions FAB */}
+            <QuickActions projectId={projectId} currentPage="valuations" />
         </div>
     );
 }

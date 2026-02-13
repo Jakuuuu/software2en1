@@ -176,6 +176,12 @@ export interface APU {
         total: number;
     };
     unitPrice: number;
+
+    // AI Analysis Data
+    incidencias?: {
+        laborales: { concepto: string; porcentaje: number; monto: number; base_legal?: string }[];
+        total_incidencias: number;
+    };
 }
 
 // ============================================

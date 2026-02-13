@@ -10,6 +10,7 @@ import {
     calculateValuationNetAmount
 } from '@/utils/calculations';
 import { DEFAULT_LEGAL_CONFIG } from '@/hooks/useData';
+import { Button } from '@/components/ui/Button';
 
 interface PartidaProgress {
     partidaId: string;
@@ -189,45 +190,46 @@ export default function ValuationFormModal({
     const totalPartidasWithProgress = progress.filter(p => p.thisValuation > 0).length;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-slate-200">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-gradient-to-r from-emerald-50 to-white">
+                <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                            <Calculator className="text-emerald-600" size={28} />
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <Calculator className="text-emerald-600" size={24} />
                             Nueva Valuación
                         </h2>
-                        <p className="text-sm text-slate-500 mt-1">
+                        <p className="text-sm text-slate-500 mt-0.5">
                             {project.name} | Valuación #{existingValuations.length + 1}
                         </p>
                     </div>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onClose}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
                     >
-                        <X size={24} className="text-slate-600" />
-                    </button>
+                        <X size={20} className="text-slate-500 hover:text-slate-800" />
+                    </Button>
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {/* Period Selection */}
-                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                    <div className="bg-slate-50/50 rounded-lg p-4 border border-slate-200">
                         <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
                             <Calendar size={18} className="text-indigo-600" />
                             Período de Valuación
                         </h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
                                     Fecha Inicio *
                                 </label>
                                 <input
                                     type="date"
                                     value={periodStart}
                                     onChange={(e) => setPeriodStart(e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 ${errors.periodStart ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm ${errors.periodStart ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                 />
                                 {errors.periodStart && (
@@ -235,14 +237,14 @@ export default function ValuationFormModal({
                                 )}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
                                     Fecha Fin *
                                 </label>
                                 <input
                                     type="date"
                                     value={periodEnd}
                                     onChange={(e) => setPeriodEnd(e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 ${errors.periodEnd ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm ${errors.periodEnd ? 'border-red-500' : 'border-slate-300'
                                         }`}
                                 />
                                 {errors.periodEnd && (
@@ -270,17 +272,17 @@ export default function ValuationFormModal({
                                 <table className="w-full text-sm">
                                     <thead className="bg-slate-100 sticky top-0">
                                         <tr>
-                                            <th className="text-left p-3 font-semibold text-slate-700 w-24">Código</th>
-                                            <th className="text-left p-3 font-semibold text-slate-700">Descripción</th>
-                                            <th className="text-center p-3 font-semibold text-slate-700 w-20">Unidad</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-24">Contratado</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-24">Acumulado</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-24">Restante</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-32">Esta Valuación</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-32">Monto</th>
+                                            <th className="text-left p-3 font-semibold text-slate-700 w-24 border-b border-slate-200">Código</th>
+                                            <th className="text-left p-3 font-semibold text-slate-700 border-b border-slate-200">Descripción</th>
+                                            <th className="text-center p-3 font-semibold text-slate-700 w-20 border-b border-slate-200">Unidad</th>
+                                            <th className="text-right p-3 font-semibold text-slate-700 w-24 border-b border-slate-200">Contratado</th>
+                                            <th className="text-right p-3 font-semibold text-slate-700 w-24 border-b border-slate-200">Acumulado</th>
+                                            <th className="text-right p-3 font-semibold text-slate-700 w-24 border-b border-slate-200">Restante</th>
+                                            <th className="text-right p-3 font-semibold text-slate-700 w-32 border-b border-slate-200">Esta Valuación</th>
+                                            <th className="text-right p-3 font-semibold text-slate-700 w-32 border-b border-slate-200">Monto</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="divide-y divide-slate-100">
                                         {progress.map((p, idx) => {
                                             const amount = p.thisValuation * p.unitPrice;
                                             const hasProgress = p.thisValuation > 0;
@@ -288,25 +290,25 @@ export default function ValuationFormModal({
                                             return (
                                                 <tr
                                                     key={p.partidaId}
-                                                    className={`border-b border-slate-100 ${hasProgress ? 'bg-emerald-50' : 'hover:bg-slate-50'
+                                                    className={`${hasProgress ? 'bg-emerald-50/50' : 'hover:bg-slate-50'
                                                         }`}
                                                 >
                                                     <td className="p-3">
-                                                        <span className="text-xs font-mono text-slate-600">{p.code}</span>
+                                                        <span className="text-xs font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">{p.code}</span>
                                                     </td>
                                                     <td className="p-3">
-                                                        <span className="text-slate-700">{p.description}</span>
+                                                        <span className="text-slate-700 line-clamp-2" title={p.description}>{p.description}</span>
                                                     </td>
                                                     <td className="p-3 text-center">
-                                                        <span className="text-slate-600">{p.unit}</span>
+                                                        <span className="text-slate-500 text-xs">{p.unit}</span>
                                                     </td>
-                                                    <td className="p-3 text-right text-slate-600">
+                                                    <td className="p-3 text-right text-slate-600 font-mono text-xs">
                                                         {Number(p.contracted || 0).toFixed(2)}
                                                     </td>
-                                                    <td className="p-3 text-right text-slate-600">
+                                                    <td className="p-3 text-right text-slate-600 font-mono text-xs">
                                                         {Number(p.previousAccumulated || 0).toFixed(2)}
                                                     </td>
-                                                    <td className="p-3 text-right">
+                                                    <td className="p-3 text-right font-mono text-xs">
                                                         <span className={p.remaining > 0 ? 'text-amber-600 font-medium' : 'text-slate-400'}>
                                                             {Number(p.remaining || 0).toFixed(2)}
                                                         </span>
@@ -320,17 +322,17 @@ export default function ValuationFormModal({
                                                             value={p.thisValuation || ''}
                                                             onChange={(e) => handleProgressChange(p.partidaId, e.target.value)}
                                                             disabled={p.remaining <= 0}
-                                                            className={`w-full px-2 py-1 border rounded text-right focus:ring-2 focus:ring-emerald-500 ${p.remaining <= 0
+                                                            className={`w-full px-2 py-1 border rounded text-right font-mono text-sm focus:ring-2 focus:ring-emerald-500 transition-colors ${p.remaining <= 0
                                                                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                                                 : hasProgress
-                                                                    ? 'border-emerald-500 bg-white font-semibold'
+                                                                    ? 'border-emerald-500 bg-white font-bold text-emerald-700'
                                                                     : 'border-slate-300'
                                                                 }`}
                                                             placeholder="0.00"
                                                         />
                                                     </td>
-                                                    <td className="p-3 text-right">
-                                                        <span className={hasProgress ? 'font-bold text-emerald-600' : 'text-slate-600'}>
+                                                    <td className="p-3 text-right font-mono text-sm">
+                                                        <span className={hasProgress ? 'font-bold text-emerald-600' : 'text-slate-400'}>
                                                             {formatCurrency(amount, currency)}
                                                         </span>
                                                     </td>
@@ -344,24 +346,24 @@ export default function ValuationFormModal({
                     </div>
 
                     {/* Summary */}
-                    <div className="bg-gradient-to-br from-emerald-50 to-indigo-50 rounded-lg p-6 border-2 border-emerald-200">
+                    <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
                         <h3 className="font-bold text-slate-800 mb-4 text-lg">Resumen de Valuación</h3>
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
-                                <span className="text-slate-700">Monto Bruto:</span>
-                                <span className="font-bold text-lg text-slate-800">
+                                <span className="text-slate-600 text-sm uppercase tracking-wider">Monto Bruto</span>
+                                <span className="font-bold text-lg text-slate-800 font-mono">
                                     {formatCurrency(grossAmount, currency)}
                                 </span>
                             </div>
 
                             {/* Deductions */}
-                            <div className="border-t border-emerald-200 pt-3 space-y-2">
+                            <div className="border-t border-slate-200 pt-3 space-y-2">
                                 {advancePaymentDeduction > 0 && (
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-slate-600">
-                                            (-) Amortización Anticipo ({(legalConfig.advancePayment * 100).toFixed(1)}%):
+                                            (-) Amortización Anticipo ({(legalConfig.advancePayment * 100).toFixed(1)}%)
                                         </span>
-                                        <span className="font-semibold text-red-600">
+                                        <span className="font-medium text-red-600 font-mono">
                                             -{formatCurrency(advancePaymentDeduction, currency)}
                                         </span>
                                     </div>
@@ -371,18 +373,18 @@ export default function ValuationFormModal({
                                     <>
                                         <div className="flex justify-between items-center text-sm">
                                             <span className="text-slate-600">
-                                                (+) IVA ({(legalConfig.ivaRate * 100).toFixed(0)}%):
+                                                (+) IVA ({(legalConfig.ivaRate * 100).toFixed(0)}%)
                                             </span>
-                                            <span className="font-semibold text-emerald-600">
+                                            <span className="font-medium text-emerald-600 font-mono">
                                                 +{formatCurrency(ivaAmount, currency)}
                                             </span>
                                         </div>
                                         {ivaRetention > 0 && (
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-slate-600">
-                                                    (-) Retención IVA ({(legalConfig.retentionIVA * 100).toFixed(0)}%):
+                                                    (-) Retención IVA ({(legalConfig.retentionIVA * 100).toFixed(0)}%)
                                                 </span>
-                                                <span className="font-semibold text-red-600">
+                                                <span className="font-medium text-red-600 font-mono">
                                                     -{formatCurrency(ivaRetention, currency)}
                                                 </span>
                                             </div>
@@ -393,9 +395,9 @@ export default function ValuationFormModal({
                                 {islrRetention > 0 && (
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-slate-600">
-                                            (-) Retención ISLR ({(legalConfig.retentionISLR * 100).toFixed(1)}%):
+                                            (-) Retención ISLR ({(legalConfig.retentionISLR * 100).toFixed(1)}%)
                                         </span>
-                                        <span className="font-semibold text-red-600">
+                                        <span className="font-medium text-red-600 font-mono">
                                             -{formatCurrency(islrRetention, currency)}
                                         </span>
                                     </div>
@@ -404,9 +406,9 @@ export default function ValuationFormModal({
                                 {guaranteeFund > 0 && (
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-slate-600">
-                                            (-) Fondo de Garantía ({(legalConfig.performanceBond * 100).toFixed(1)}%):
+                                            (-) Fondo de Garantía ({(legalConfig.performanceBond * 100).toFixed(1)}%)
                                         </span>
-                                        <span className="font-semibold text-red-600">
+                                        <span className="font-medium text-red-600 font-mono">
                                             -{formatCurrency(guaranteeFund, currency)}
                                         </span>
                                     </div>
@@ -414,9 +416,9 @@ export default function ValuationFormModal({
                             </div>
 
                             {/* Net Amount */}
-                            <div className="border-t-2 border-emerald-300 pt-3 flex justify-between items-center">
-                                <span className="font-bold text-slate-800 text-lg">MONTO NETO A PAGAR:</span>
-                                <span className="font-bold text-2xl text-emerald-600">
+                            <div className="border-t-2 border-slate-200 pt-3 flex justify-between items-center mt-4">
+                                <span className="font-bold text-slate-800 text-lg">MONTO NETO A PAGAR</span>
+                                <span className="font-bold text-2xl text-emerald-600 font-mono">
                                     {formatCurrency(netAmount, currency)}
                                 </span>
                             </div>
@@ -428,7 +430,7 @@ export default function ValuationFormModal({
                 <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
                     <div className="text-sm text-slate-600">
                         {totalPartidasWithProgress > 0 ? (
-                            <span className="flex items-center gap-2 text-emerald-600">
+                            <span className="flex items-center gap-2 text-emerald-600 font-medium">
                                 <CheckCircle2 size={16} />
                                 {totalPartidasWithProgress} partida{totalPartidasWithProgress !== 1 ? 's' : ''} con avance
                             </span>
@@ -440,24 +442,25 @@ export default function ValuationFormModal({
                         )}
                     </div>
                     <div className="flex gap-3">
-                        <button
+                        <Button
+                            variant="ghost"
                             onClick={onClose}
-                            className="px-5 py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg font-medium transition-colors"
                         >
                             Cancelar
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="outline"
                             onClick={() => handleSubmit('draft')}
-                            className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
                         >
                             Guardar Borrador
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="primary"
                             onClick={() => handleSubmit('submitted')}
-                            className="px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-200"
+                            className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
                         >
                             Crear Valuación
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>

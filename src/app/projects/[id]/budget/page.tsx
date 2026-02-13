@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Pencil, Trash2, ChevronDown, ChevronRight, FileDown, Calculator } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, ChevronDown, ChevronRight, FileDown, Calculator, Search, Filter } from 'lucide-react';
 import { Partida, Resource, PartidaFormData, Project } from '@/types';
 import { generatePartidaPDF, generateBudgetPDF } from '@/utils/pdfGenerator';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -14,6 +14,9 @@ import { calculateUnitPrice } from '@/utils/calculations';
 import { EmptyState } from '@/components/EmptyState';
 import { QuickActions } from '@/components/QuickActions';
 import { useToast } from '@/components/Toast';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 export default function ProjectBudgetPage() {
     const params = useParams();
@@ -26,6 +29,7 @@ export default function ProjectBudgetPage() {
     const [project, setProject] = useState<Project | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [editingPartida, setEditingPartida] = useState<Partida | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { showToast } = useToast();
 
@@ -42,10 +46,10 @@ export default function ProjectBudgetPage() {
 
     if (!project) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="min-h-[calc(100vh-64px)] bg-slate-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-                    <p className="mt-4 text-slate-600">Cargando proyecto...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-slate-600 font-mono text-sm">LOADING_BUDGET_DATA...</p>
                 </div>
             </div>
         );
@@ -111,203 +115,232 @@ export default function ProjectBudgetPage() {
         }
     };
 
-
+    const filteredPartidas = partidas.filter(p =>
+        p.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const totalBudget = partidas.reduce((sum, p) => sum + (p.contracted || 0), 0);
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-[calc(100vh-64px)] bg-slate-50 relative">
+            {/* Background Decor */}
+            <div className="absolute inset-0 bg-tech-pattern opacity-30 pointer-events-none"></div>
+
             {/* Navbar */}
-            <nav className="bg-white border-b border-slate-200 px-8 py-4 sticky top-0 z-50 shadow-sm">
+            <nav className="bg-white border-b border-slate-200 px-6 py-3 sticky top-0 z-40 shadow-sm">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Link href="/" className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-indigo-200 shadow-lg hover:bg-indigo-700 transition-colors">
-                            A
+                    <div className="flex items-center gap-4">
+                        <Link href={`/projects/${projectId}`}>
+                            <Button variant="ghost" size="icon" className="text-slate-500">
+                                <ArrowLeft size={20} />
+                            </Button>
                         </Link>
                         <div>
-                            <h1 className="text-xl font-bold text-slate-900 leading-none">2 en 1 APU</h1>
-                            <p className="text-xs text-slate-500 mt-1">{project.name}</p>
+                            <div className="flex items-center gap-2 text-xs font-mono text-slate-500 mb-0.5">
+                                <span>PROJECT: {project.code}</span>
+                                <span>/</span>
+                                <span>BUDGET</span>
+                            </div>
+                            <h1 className="text-lg font-bold text-slate-900 tracking-tight">{project.name}</h1>
                         </div>
                     </div>
-                    <Link href={`/projects/${projectId}`} className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-slate-100 text-slate-600 font-medium">
-                        <ArrowLeft size={16} /> Volver al Dashboard
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <div className="hidden md:block text-right mr-4">
+                            <p className="text-xs text-slate-500 uppercase tracking-wider">Total Presupuestado</p>
+                            <p className="text-xl font-bold text-primary-600 font-mono">
+                                {formatCurrency(totalBudget, project.contract.currency)}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </nav>
 
-            <main className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-                <Breadcrumb items={[
-                    { label: 'Proyectos', href: '/projects' },
-                    { label: project.name, href: `/projects/${projectId}` },
-                    { label: 'Presupuesto y APU' }
-                ]} />
-
-                {/* Header */}
-                <div className="flex justify-between items-center">
+            <main className="max-w-7xl mx-auto px-6 py-8 space-y-6 relative z-10">
+                {/* Header & Actions */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div>
-                        <h2 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-                            <Calculator className="text-indigo-600" size={32} />
+                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-1">
+                            <Calculator className="text-primary-600" size={24} />
                             Presupuesto y APU
                         </h2>
-                        <p className="text-slate-500 mt-2">
-                            {partidas.length} partidas | Moneda: {project.contract.currency}
-                            {project.contract.currency === 'USD' && project.contract.exchangeRate && (
-                                <span className="ml-2">| Tasa: Bs. {project.contract.exchangeRate.toFixed(2)}</span>
-                            )}
+                        <p className="text-slate-500 text-sm max-w-2xl">
+                            Gestiona las partidas del presupuesto y sus Análisis de Precios Unitarios (APU).
                         </p>
                     </div>
-                    <div className="flex gap-3">
-                        <button
+                    <div className="flex gap-2">
+                        <Button
+                            variant="secondary"
                             onClick={() => {
-                                console.log("Attempting to generate PDF...");
-                                if (!project) {
-                                    console.error("Project is null");
-                                    return;
-                                }
-                                console.log("Project:", project);
-                                console.log("Partidas:", partidas);
-                                generateBudgetPDF(project, partidas);
+                                if (project) generateBudgetPDF(project, partidas);
                             }}
-                            className="px-5 py-2.5 bg-rose-600 border border-transparent text-white rounded-lg font-medium hover:bg-rose-700 transition-all flex items-center gap-2 shadow-sm"
+                            leftIcon={<FileDown size={18} />}
                         >
-                            <FileDown size={18} />
-                            Descargar Presupuesto
-                        </button>
-                        <button
+                            Exportar PDF
+                        </Button>
+                        <Button
                             onClick={handleNewPartida}
-                            className="px-5 py-2.5 bg-indigo-600 rounded-lg font-medium text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2"
+                            leftIcon={<Plus size={18} />}
                         >
-                            <Plus size={18} />
                             Nueva Partida
-                        </button>
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <div className="flex gap-4">
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Buscar partida..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        />
                     </div>
                 </div>
 
                 {/* Partidas List */}
-                {partidas.length === 0 ? (
+                {filteredPartidas.length === 0 ? (
                     <EmptyState
                         icon={Calculator}
-                        title="No hay partidas aún"
-                        description="Comienza agregando la primera partida con su análisis de precios unitarios (APU) para crear tu presupuesto."
-                        primaryAction={{
+                        title={searchTerm ? "No se encontraron partidas" : "No hay partidas aún"}
+                        description={searchTerm ? "Intenta con otros términos de búsqueda" : "Comienza agregando la primera partida con su análisis de precios unitarios."}
+                        primaryAction={!searchTerm ? {
                             label: "Crear Primera Partida",
                             onClick: handleNewPartida
-                        }}
-                        iconColor="text-indigo-600"
-                        iconBgColor="bg-indigo-100"
+                        } : undefined}
+                        iconColor="text-primary-600"
+                        iconBgColor="bg-primary-50"
                     />
                 ) : (
-                    <div className="space-y-4">
-                        {partidas.map((item) => (
-                            <div key={item.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                                <div className="p-6">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-semibold">
-                                                    {item.code}
-                                                </span>
-                                                <h3 className="text-lg font-bold text-slate-800">{item.description}</h3>
-                                            </div>
-                                            <div className="flex items-center gap-6 text-sm text-slate-600">
-                                                <span>Unidad: <strong>{item.unit}</strong></span>
-                                                <span>Cantidad: <strong>{item.quantity.toLocaleString()}</strong></span>
-                                                <span>P. Unitario: <strong>{formatCurrency(item.unitPrice || 0, project.contract.currency)}</strong></span>
-                                                <span className="text-indigo-600 font-bold">
-                                                    Total: {formatCurrency((item.quantity || 0) * (item.unitPrice || 0), project.contract.currency)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() => handleEditPartida(item)}
-                                                className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                                                title="Editar"
-                                            >
-                                                <Pencil size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeletePartida(item.id)}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Eliminar"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                            {item.apu && (
-                                                <>
-                                                    <button
-                                                        onClick={() => project && generatePartidaPDF(item, project)}
-                                                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                                                        title="Descargar PDF"
-                                                    >
-                                                        <FileDown size={18} />
-                                                    </button>
+                    <Card className="overflow-hidden" noPadding>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200 uppercase tracking-wider text-xs">
+                                    <tr>
+                                        <th className="px-6 py-3 w-10"></th>
+                                        <th className="px-6 py-3">Código</th>
+                                        <th className="px-6 py-3">Descripción</th>
+                                        <th className="px-6 py-3 text-right">Cant.</th>
+                                        <th className="px-6 py-3 text-right">P. Unitario</th>
+                                        <th className="px-6 py-3 text-right">Total</th>
+                                        <th className="px-6 py-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {filteredPartidas.map((item) => (
+                                        <React.Fragment key={item.id}>
+                                            <tr className="hover:bg-slate-50/50 transition-colors group">
+                                                <td className="px-6 py-4">
                                                     <button
                                                         onClick={() => toggleExpand(item.id)}
-                                                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                        title={expandedId === item.id ? "Ocultar APU" : "Ver APU"}
+                                                        className="text-slate-400 hover:text-primary-600 transition-colors"
                                                     >
                                                         {expandedId === item.id ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                                                     </button>
-                                                </>
+                                                </td>
+                                                <td className="px-6 py-4 font-mono text-slate-600 font-medium">
+                                                    {item.code}
+                                                </td>
+                                                <td className="px-6 py-4 font-medium text-slate-800 max-w-md">
+                                                    {item.description}
+                                                    {item.apu?.incidencias && item.apu.incidencias.total_incidencias > 0 && (
+                                                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">
+                                                            ⚠ INCIDENCIAS
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-mono text-slate-600">
+                                                    {item.quantity.toLocaleString()} <span className="text-xs text-slate-400 ml-1">{item.unit}</span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-mono text-slate-600">
+                                                    {formatCurrency(item.unitPrice || 0, project.contract.currency)}
+                                                </td>
+                                                <td className="px-6 py-4 text-right font-mono font-bold text-slate-800">
+                                                    {formatCurrency((item.quantity || 0) * (item.unitPrice || 0), project.contract.currency)}
+                                                </td>
+                                                <td className="px-6 py-4 text-center">
+                                                    <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleEditPartida(item)} className="h-8 w-8">
+                                                            <Pencil size={16} className="text-slate-500" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" onClick={() => handleDeletePartida(item.id)} className="h-8 w-8">
+                                                            <Trash2 size={16} className="text-red-500" />
+                                                        </Button>
+                                                        {item.apu && (
+                                                            <Button variant="ghost" size="icon" onClick={() => project && generatePartidaPDF(item, project)} className="h-8 w-8">
+                                                                <FileDown size={16} className="text-emerald-500" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {expandedId === item.id && item.apu && (
+                                                <tr className="bg-slate-50/50 shadow-inner">
+                                                    <td colSpan={7} className="px-6 py-4">
+                                                        <div className="pl-12">
+                                                            <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm max-w-3xl">
+                                                                <h4 className="font-bold text-primary-900 mb-3 text-xs uppercase tracking-wider flex items-center gap-2">
+                                                                    <Calculator size={14} />
+                                                                    Resumen de Costos (APU)
+                                                                </h4>
+                                                                <div className="grid grid-cols-2 gap-8 text-sm">
+                                                                    <div className="space-y-2">
+                                                                        <div className="flex justify-between text-slate-600">
+                                                                            <span>Materiales:</span>
+                                                                            <span className="font-mono">{formatCurrency(item.apu.subtotals?.materials || 0, project.contract.currency)}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between text-slate-600">
+                                                                            <span>Equipos:</span>
+                                                                            <span className="font-mono">{formatCurrency(item.apu.subtotals?.equipment || 0, project.contract.currency)}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between text-slate-600">
+                                                                            <span>Mano de Obra:</span>
+                                                                            <span className="font-mono">{formatCurrency(item.apu.subtotals?.labor || 0, project.contract.currency)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="space-y-2 border-l border-slate-100 pl-8">
+                                                                        <div className="flex justify-between text-slate-700 font-medium">
+                                                                            <span>Costo Directo:</span>
+                                                                            <span className="font-mono">{formatCurrency(item.apu.directCost || 0, project.contract.currency)}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between text-slate-700 font-medium">
+                                                                            <span>Ind. y Utilidad:</span>
+                                                                            <span className="font-mono">{formatCurrency(item.apu.indirectCosts?.total || 0, project.contract.currency)}</span>
+                                                                        </div>
+                                                                        <div className="border-t border-slate-200 pt-2 mt-2 flex justify-between font-bold text-primary-600 text-base">
+                                                                            <span>PRECIO UNITARIO:</span>
+                                                                            <span className="font-mono">{formatCurrency(item.apu.unitPrice || 0, project.contract.currency)}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+                                                                    <Button size="sm" variant="outline" onClick={() => handleEditPartida(item)}>
+                                                                        Ver Análisis Completo
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             )}
-                                        </div>
-                                    </div>
-
-                                    {/* APU Details */}
-                                    {expandedId === item.id && item.apu && (
-                                        <div className="mt-6 space-y-6 border-t border-slate-200 pt-6">
-                                            {/* Materials, Equipment, Labor tables - Same as before */}
-                                            <div className="bg-indigo-50 rounded-lg p-4 border-2 border-indigo-200">
-                                                <h4 className="font-bold text-indigo-900 mb-3">RESUMEN DE COSTOS</h4>
-                                                <div className="space-y-2 text-sm">
-                                                    <div className="flex justify-between">
-                                                        <span>Costo Directo:</span>
-                                                        <span className="font-semibold">{formatCurrency(item.apu.directCost || 0, project.contract.currency)}</span>
-                                                    </div>
-                                                    <div className="flex justify-between">
-                                                        <span>Costos Indirectos:</span>
-                                                        <span className="font-semibold">{formatCurrency(item.apu.indirectCosts?.total || 0, project.contract.currency)}</span>
-                                                    </div>
-                                                    <div className="border-t-2 border-indigo-300 pt-2 mt-2 flex justify-between font-bold text-lg">
-                                                        <span>PRECIO UNITARIO:</span>
-                                                        <span className="text-indigo-600">{formatCurrency(item.apu.unitPrice || 0, project.contract.currency)}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+                                        </React.Fragment>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+                                <div className="text-right">
+                                    <span className="text-xs text-slate-500 uppercase tracking-wider mr-4">Total Presupuesto</span>
+                                    <span className="text-lg font-bold text-slate-900 font-mono">
+                                        {formatCurrency(totalBudget, project.contract.currency)}
+                                    </span>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    </Card>
                 )}
-
-                {/* Summary */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 className="text-xl font-bold text-slate-800 mb-4">Resumen del Presupuesto</h3>
-                    <div className="grid grid-cols-3 gap-6">
-                        <div>
-                            <p className="text-sm text-slate-500 mb-1">Total Partidas</p>
-                            <p className="text-2xl font-bold text-slate-900">{partidas.length}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-slate-500 mb-1">Monto Total Presupuestado</p>
-                            <p className="text-2xl font-bold text-indigo-600">
-                                {formatCurrency(totalBudget, project.contract.currency)}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="text-sm text-slate-500 mb-1">Próximo Paso</p>
-                            <Link
-                                href={`/projects/${projectId}/valuations`}
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
-                            >
-                                Ir a Valuaciones →
-                            </Link>
-                        </div>
-                    </div>
-                </div>
             </main>
 
             {/* APU Editor Modal */}
