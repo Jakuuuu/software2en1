@@ -14,19 +14,141 @@ export interface Resource {
     lastUpdated?: Date;
 }
 
+// ============================================
+// MATERIAL RESOURCE (with waste factor)
+// ============================================
+
+export interface MaterialResource extends Resource {
+    wasteFactor?: number; // % de desperdicio (ej: 0.05 = 5%)
+    effectiveQuantity?: number; // quantity * (1 + wasteFactor)
+    priceSource?: 'QUOTATION' | 'DATALAING' | 'MAPREX' | 'CIV' | 'MARKET' | 'MANUAL';
+    quotationNumber?: string;
+    quotationDate?: Date;
+    supplierRIF?: string;
+}
+
+// ============================================
+// EQUIPMENT RESOURCE (with COP)
+// ============================================
+
+export interface EquipmentResource extends Resource {
+    ownershipType?: 'RENTED' | 'OWNED';
+    // Para equipos propios - COP (Costo de Posesión y Operación)
+    acquisitionValue?: number;
+    residualValue?: number;
+    usefulLifeHours?: number;
+    interestRate?: number;
+    insuranceRate?: number;
+    maintenanceCostPerHour?: number;
+    operationCostPerHour?: number;
+    cop?: number; // COP calculado
+}
+
+// ============================================
+// LABOR RESOURCE (with complete FCAS)
+// ============================================
+
 export interface LaborResource extends Resource {
     category: 'Profesional' | 'Técnico' | 'Obrero' | 'Ayudante';
+    specialty?: string; // ej: "Albañil", "Electricista", "Plomero"
     dailyRate?: number;
     hoursPerUnit?: number;
+
+    // Tabulador
+    tabulatorSource?: 'CIV' | 'CONVENCION_COLECTIVA' | 'CUSTOM';
+    tabulatorDate?: Date;
+
+    // FCAS completo (Factor de Costos Asociados al Salario)
+    fcas?: {
+        workedDaysPerYear: number; // 260 días
+        paidDaysPerYear: number; // 365 días
+        sso: number; // 13.5% - Seguro Social Obligatorio
+        lph: number; // 3% - Ley Política Habitacional
+        banavih: number; // 1% - Banavih
+        inces: number; // 2% - INCES
+        vacations: number; // 5.77% - Vacaciones
+        vacationBonus: number; // Variable - Bono vacacional
+        utilities: number; // 5.77% - Utilidades
+        yearEndBonus: number; // Variable - Bono de fin de año
+        cestaTicket: number; // Bs/día - Cesta Ticket
+        eppDotation: number; // Dotación EPP
+        paidHolidays: number; // 4.62% - Días feriados
+        severance: number; // Antigüedad
+        totalFactor: number; // Factor total (1.485 - 1.65)
+        totalCost: number; // Costo total con FCAS
+    };
+
+    // Legacy compatibility
     socialCharges?: {
-        sso: number; // Seguro Social Obligatorio
-        lph: number; // Ley de Política Habitacional
-        inces: number; // INCES
+        sso: number;
+        lph: number;
+        inces: number;
         vacations: number;
         utilities: number;
         total: number;
     };
 }
+
+// ============================================
+// INSUMO MAESTRO (Master Database)
+// ============================================
+
+export type InsumoTipo = 'MATERIAL' | 'EQUIPO' | 'MANO_OBRA';
+
+export interface InsumoMaestro {
+    id: string;
+    codigo: string; // Código interno (ej: "M001", "E015", "L003")
+    descripcion: string;
+    unidad: string;
+    tipo: InsumoTipo;
+    categoria: string; // "Concreto", "Herramientas", "Albañilería", etc.
+
+    // Precios duales
+    precioUnitarioBs: number; // Precio en Bolívares
+    precioUnitarioUSD: number; // Precio en USD
+    tasaCambioReferencia: number; // Tasa usada para conversión
+    fechaActualizacion: Date;
+
+    // Proveedor/Fuente
+    proveedor?: string;
+    fuentePrecio?: 'BCV' | 'PROVEEDOR' | 'TABULADOR_CIV' | 'MERCADO' | 'MANUAL';
+
+    // Específicos por tipo de insumo
+    // Para materiales
+    wasteFactorDefault?: number; // Factor de desperdicio por defecto
+
+    // Para equipos
+    ownershipTypeDefault?: 'OWNED' | 'RENTED';
+    usefulLifeHours?: number; // Vida útil en horas
+
+    // Para mano de obra
+    categoriaLaboral?: 'Profesional' | 'Técnico' | 'Obrero' | 'Ayudante';
+    especialidad?: string;
+    tabulador?: string; // "CIV 2026", "Convención Colectiva"
+
+    // Metadata
+    activo: boolean; // Si está activo para uso
+    notas?: string;
+}
+
+// Configuración de tasa de cambio
+export interface TasaCambio {
+    valor: number; // Bs por USD
+    fecha: Date;
+    fuente: 'BCV' | 'MANUAL';
+}
+
+// Base de datos de insumos
+export interface InsumosDatabase {
+    insumos: InsumoMaestro[];
+    categorias: {
+        materiales: string[];
+        equipos: string[];
+        manoDeObra: string[];
+    };
+    tasaCambio: TasaCambio;
+}
+
 
 // ============================================
 // APU (Análisis de Precio Unitario)
@@ -154,6 +276,33 @@ export interface LegalConfig {
     incesRate: number; // 2%
     vacationsRate: number; // 15%
     utilitiesRateMO: number; // 15%
+
+    // ============================================
+    // NUEVOS CAMPOS PARA FCAS COMPLETO
+    // ============================================
+
+    // Días trabajados vs pagados
+    workedDaysPerYear: number; // Default: 260 días
+    paidDaysPerYear: number; // Default: 365 días
+
+    // Cargas adicionales
+    banavihRate: number; // 1% - Banavih
+    cestaTicketDaily: number; // Bs/día - Cesta Ticket según BCV
+    eppDotationYearly: number; // Costo anual dotación EPP
+    paidHolidaysPerYear: number; // 12 días feriados
+    vacationBonusDays: number; // 7 días + 1/12
+    yearEndBonusDays: number; // 15 días mínimo
+    severanceDaysPerYear: number; // 5 días/año antigüedad
+
+    // ============================================
+    // MODO GUBERNAMENTAL Y VALIDACIONES
+    // ============================================
+
+    isGovernmentProject: boolean; // Proyecto gubernamental
+    requirePriceValidation: boolean; // Validar fuentes de precios
+    requireWasteFactors: boolean; // Exigir factores de desperdicio
+    requireCOPCalculation: boolean; // Exigir COP para equipos propios
+    requireTabulators: boolean; // Usar tabuladores oficiales
 }
 
 export interface Project {
@@ -252,12 +401,19 @@ export interface APUResponse {
     analisis_costos: {
         materiales: { descripcion: string; unidad: string; cantidad: number; precio_unitario: number; total: number }[];
         equipos: { descripcion: string; unidad: string; cantidad: number; precio_unitario: number; total: number }[];
-        mano_obra: { descripcion: string; cantidad: number; precio_unitario: number; total: number }[];
+        mano_obra: {
+            descripcion: string;
+            cantidad: number;
+            precio_unitario: number;
+            total: number;
+            fcas_factor?: number; // Factor asociado al salario
+        }[];
     };
     costos_directos: {
         total_materiales: number;
         total_equipos: number;
         total_mano_obra: number;
+        total_fcas?: number; // Total calculado de FCAS
         subtotal_directo: number;
     };
     incidencias: {

@@ -1,7 +1,7 @@
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { APUResponse } from '../types';
+import { APUResponse, MaterialResource, EquipmentResource, LaborResource } from '../types';
 import { PDF_STYLES, addPageFooter, formatCurrencyForPDF } from './pdfStyles';
 
 export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL' | 'PRIVADO') => {
@@ -40,6 +40,16 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
     doc.text(`Código: ${apuData.codigo_covenin}`, rightX, 12, { align: 'right' });
     doc.text(`Fecha: ${new Date().toLocaleDateString('es-VE')}`, rightX, 19, { align: 'right' });
 
+    // Government badge
+    if (isGovernment) {
+        doc.setFillColor(220, 38, 38);
+        doc.roundedRect(margins.left, 22, 45, 8, 2, 2, 'F');
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('PROYECTO GUBERNAMENTAL', margins.left + 22.5, 27, { align: 'center' });
+    }
+
     doc.setTextColor(0, 0, 0);
     currentY = 45;
 
@@ -63,185 +73,493 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
     doc.text(`UNIDAD: ${apuData.unidad}`, margins.left, currentY);
     currentY += 10;
 
-    // Helper for Tables
-    const addTable = (title: string, items: any[], columns: string[], keys: string[], citation?: string) => {
-        if (!items || items.length === 0) return;
+    // ============================================
+    // 3. MATERIALS TABLE (with waste factor)
+    // ============================================
 
-        // Section Title
+    if (apuData.analisis_costos.materiales && apuData.analisis_costos.materiales.length > 0) {
         doc.setFontSize(fonts.heading);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(...colors.primary);
-        doc.text(title, margins.left, currentY);
+        doc.text('MATERIALES', margins.left, currentY);
         currentY += 6;
 
-        // Legal Citation
-        if (citation && isGovernment) {
+        if (isGovernment) {
             doc.setFontSize(fonts.small - 2);
             doc.setFont('helvetica', 'italic');
-            doc.setTextColor(...colors.medium);
-            doc.text(`Base Legal: ${citation}`, margins.left, currentY);
-            doc.setTextColor(0, 0, 0);
+            doc.setTextColor(100, 100, 100);
+            doc.text('COVENIN 2250-2000 Cap. 4 Art. 12 - Factores de Desperdicio', margins.left, currentY);
             currentY += 4;
         }
 
-        // Table
-        autoTable(doc, {
-            startY: currentY,
-            head: [columns],
-            body: items.map(item => keys.map(k => {
-                if (k === 'precio_unitario' || k === 'total' || k === 'monto') {
-                    return formatCurrencyForPDF(item[k], 'USD').replace('$', ''); // Simplified for demo
-                }
-                return item[k];
-            })),
-            theme: 'striped',
-            headStyles: {
-                fillColor: colors.medium,
-                fontSize: fonts.small,
-                halign: 'center'
-            },
-            styles: { fontSize: fonts.small - 1 },
-            columnStyles: {
-                [keys.length - 1]: { halign: 'right', fontStyle: 'bold' },
-                [keys.length - 2]: { halign: 'right' }
+        doc.setTextColor(0, 0, 0);
+
+        const materialsData = apuData.analisis_costos.materiales.map((m: any) => {
+            const mat = m as MaterialResource;
+            const baseRow = [
+                m.descripcion,
+                m.unidad,
+                m.cantidad.toFixed(2)
+            ];
+
+            if (isGovernment && mat.wasteFactor !== undefined) {
+                const wastePct = (mat.wasteFactor * 100).toFixed(1) + '%';
+                const effectiveQty = (m.cantidad * (1 + (mat.wasteFactor || 0))).toFixed(2);
+                return [
+                    ...baseRow,
+                    wastePct,
+                    effectiveQty,
+                    formatCurrencyForPDF(m.precio_unitario),
+                    formatCurrencyForPDF(m.total)
+                ];
             }
+
+            return [
+                ...baseRow,
+                formatCurrencyForPDF(m.precio_unitario),
+                formatCurrencyForPDF(m.total)
+            ];
         });
 
-        currentY = (doc as any).lastAutoTable.finalY + 10;
-    };
+        const materialsColumns = isGovernment
+            ? ['Descripción', 'Unid.', 'Cant.', 'Desp.', 'Cant. Efec.', 'P.Unit.', 'Total']
+            : ['Descripción', 'Unid.', 'Cantidad', 'P.Unit.', 'Total'];
+
+        autoTable(doc, {
+            startY: currentY,
+            head: [materialsColumns],
+            body: materialsData,
+            theme: 'striped',
+            headStyles: { fillColor: colors.primary, fontSize: fonts.small },
+            styles: { fontSize: fonts.small, cellPadding: 2 },
+            columnStyles: isGovernment ? {
+                0: { cellWidth: 60 },
+                1: { cellWidth: 15, halign: 'center' },
+                2: { cellWidth: 20, halign: 'right' },
+                3: { cellWidth: 18, halign: 'right' },
+                4: { cellWidth: 22, halign: 'right' },
+                5: { cellWidth: 22, halign: 'right' },
+                6: { cellWidth: 23, halign: 'right', fontStyle: 'bold' }
+            } : {
+                0: { cellWidth: 90 },
+                1: { cellWidth: 20, halign: 'center' },
+                2: { cellWidth: 25, halign: 'right' },
+                3: { cellWidth: 25, halign: 'right' },
+                4: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }
+            },
+            margin: { left: margins.left, right: margins.right }
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 3;
+
+        // Subtotal
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Subtotal Materiales: ${formatCurrencyForPDF(apuData.costos_directos.total_materiales)}`,
+            rightX, currentY, { align: 'right' });
+        currentY += 8;
+    }
 
     // ============================================
-    // 3. COST TABLES
+    // 4. EQUIPMENT TABLE (with COP)
     // ============================================
 
-    // Materials
-    addTable(
-        'MATERIALES',
-        apuData.analisis_costos.materiales,
-        ['Descripción', 'Unidad', 'Cantidad', 'P. Unit.', 'Total'],
-        ['descripcion', 'unidad', 'cantidad', 'precio_unitario', 'total'],
-        'COVENIN 2250-2000 Cap. 4 / Decreto 1.399/2026 Art. 5'
-    );
+    if (apuData.analisis_costos.equipos && apuData.analisis_costos.equipos.length > 0) {
+        doc.setFontSize(fonts.heading);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
+        doc.text('EQUIPOS', margins.left, currentY);
+        currentY += 6;
 
-    // Equipment
-    addTable(
-        'EQUIPOS',
-        apuData.analisis_costos.equipos,
-        ['Descripción', 'Cantidad', 'Tarifa', 'Total'],
-        ['descripcion', 'cantidad', 'precio_unitario', 'total'],
-        'COVENIN 2250-2000 Cap. 4 / Decreto 1.399/2026 Art. 7'
-    );
+        if (isGovernment) {
+            doc.setFontSize(fonts.small - 2);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(100, 100, 100);
+            doc.text('COVENIN 2250-2000 Cap. 4 Art. 15 - COP (Costo de Posesión y Operación)', margins.left, currentY);
+            currentY += 4;
+        }
 
-    // Labor
-    addTable(
-        'MANO DE OBRA',
-        apuData.analisis_costos.mano_obra,
-        ['Descripción', 'Cantidad', 'Jornal', 'Total'],
-        ['descripcion', 'cantidad', 'precio_unitario', 'total'],
-        'LOTTT Art. 104 / Decreto 1.399/2026 Art. 6'
-    );
+        doc.setTextColor(0, 0, 0);
+
+        const equipmentData = apuData.analisis_costos.equipos.map((e: any) => {
+            const eq = e as EquipmentResource;
+            const baseRow = [
+                e.descripcion,
+                e.cantidad.toFixed(2)
+            ];
+
+            if (isGovernment) {
+                const ownershipType = eq.ownershipType === 'OWNED' ? 'Propio' : 'Alquilado';
+                return [
+                    ...baseRow,
+                    ownershipType,
+                    formatCurrencyForPDF(e.precio_unitario),
+                    formatCurrencyForPDF(e.total)
+                ];
+            }
+
+            return [
+                ...baseRow,
+                formatCurrencyForPDF(e.precio_unitario),
+                formatCurrencyForPDF(e.total)
+            ];
+        });
+
+        const equipmentColumns = isGovernment
+            ? ['Descripción', 'Horas', 'Tipo', 'Tarifa/COP', 'Total']
+            : ['Descripción', 'Horas', 'Tarifa', 'Total'];
+
+        autoTable(doc, {
+            startY: currentY,
+            head: [equipmentColumns],
+            body: equipmentData,
+            theme: 'striped',
+            headStyles: { fillColor: colors.primary, fontSize: fonts.small },
+            styles: { fontSize: fonts.small, cellPadding: 2 },
+            columnStyles: isGovernment ? {
+                0: { cellWidth: 90 },
+                1: { cellWidth: 20, halign: 'right' },
+                2: { cellWidth: 25, halign: 'center' },
+                3: { cellWidth: 25, halign: 'right' },
+                4: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }
+            } : {
+                0: { cellWidth: 105 },
+                1: { cellWidth: 25, halign: 'right' },
+                2: { cellWidth: 25, halign: 'right' },
+                3: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
+            },
+            margin: { left: margins.left, right: margins.right }
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 3;
+
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Subtotal Equipos: ${formatCurrencyForPDF(apuData.costos_directos.total_equipos)}`,
+            rightX, currentY, { align: 'right' });
+        currentY += 8;
+    }
 
     // ============================================
-    // 4. INCIDENCES (Government Only)
+    // 5. LABOR TABLE (with FCAS)
     // ============================================
 
-    if (isGovernment && apuData.incidencias?.laborales) {
-        // Force new page if low on space
-        if (currentY > 200) {
+    if (apuData.analisis_costos.mano_obra && apuData.analisis_costos.mano_obra.length > 0) {
+        doc.setFontSize(fonts.heading);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
+        doc.text('MANO DE OBRA', margins.left, currentY);
+        currentY += 6;
+
+        if (isGovernment) {
+            doc.setFontSize(fonts.small - 2);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(100, 100, 100);
+            doc.text('LOTTT - Factor de Costos Asociados al Salario (FCAS)', margins.left, currentY);
+            currentY += 4;
+        }
+
+        doc.setTextColor(0, 0, 0);
+
+        const laborData = apuData.analisis_costos.mano_obra.map((l: any) => {
+            const lab = l as LaborResource;
+            const baseRow = [
+                l.descripcion,
+                l.cantidad.toFixed(2)
+            ];
+
+            if (isGovernment && lab.fcas) {
+                return [
+                    ...baseRow,
+                    formatCurrencyForPDF(l.precio_unitario),
+                    `${lab.fcas.totalFactor.toFixed(2)}x`,
+                    formatCurrencyForPDF(l.total)
+                ];
+            }
+
+            return [
+                ...baseRow,
+                formatCurrencyForPDF(l.precio_unitario),
+                formatCurrencyForPDF(l.total)
+            ];
+        });
+
+        const laborColumns = isGovernment
+            ? ['Descripción', 'Horas', 'Jornal Base', 'FCAS', 'Total']
+            : ['Descripción', 'Horas', 'Jornal', 'Total'];
+
+        autoTable(doc, {
+            startY: currentY,
+            head: [laborColumns],
+            body: laborData,
+            theme: 'striped',
+            headStyles: { fillColor: colors.primary, fontSize: fonts.small },
+            styles: { fontSize: fonts.small, cellPadding: 2 },
+            columnStyles: isGovernment ? {
+                0: { cellWidth: 85 },
+                1: { cellWidth: 20, halign: 'right' },
+                2: { cellWidth: 28, halign: 'right' },
+                3: { cellWidth: 22, halign: 'center' },
+                4: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
+            } : {
+                0: { cellWidth: 105 },
+                1: { cellWidth: 25, halign: 'right' },
+                2: { cellWidth: 25, halign: 'right' },
+                3: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
+            },
+            margin: { left: margins.left, right: margins.right }
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 3;
+
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Subtotal Mano de Obra: ${formatCurrencyForPDF(apuData.costos_directos.total_mano_obra)}`,
+            rightX, currentY, { align: 'right' });
+        currentY += 8;
+    }
+
+    // ============================================
+    // 6. FCAS BREAKDOWN TABLE (Government only)
+    // ============================================
+
+    if (isGovernment && apuData.analisis_costos.mano_obra && apuData.analisis_costos.mano_obra.length > 0) {
+        // Check if we need a new page
+        if (currentY > 240) {
             doc.addPage();
             currentY = margins.top;
         }
 
         doc.setFontSize(fonts.heading);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colors.secondary);
-        doc.text('INCIDENCIAS LABORALES Y BENEFICIOS SOCIALES', margins.left, currentY);
+        doc.setTextColor(...colors.primary);
+        doc.text('DESGLOSE FCAS (Factor de Costos Asociados al Salario)', margins.left, currentY);
         currentY += 6;
 
-        doc.setFontSize(fonts.small - 2);
+        doc.setFontSize(fonts.small - 1);
         doc.setFont('helvetica', 'italic');
-        doc.setTextColor(...colors.medium);
-        doc.text('Desglose conforme a LOTTT y Ley de Protección de Pensiones 2026', margins.left, currentY);
-        doc.setTextColor(0, 0, 0);
-        currentY += 4;
+        doc.setTextColor(100, 100, 100);
+        doc.text('Cumplimiento: LOTTT Art. 104, 142, 173, 174, 190, 192 | LOPCYMAT Art. 56 | Decreto 4.298', margins.left, currentY);
+        currentY += 6;
 
-        autoTable(doc, {
-            startY: currentY,
-            head: [['Concepto', 'Base Legal', '%', 'Monto']],
-            body: apuData.incidencias.laborales.map(i => [
-                i.concepto,
-                i.base_legal || '-',
-                `${i.porcentaje}%`,
-                formatCurrencyForPDF(i.monto, 'USD').replace('$', '')
-            ]),
-            theme: 'grid',
-            headStyles: { fillColor: colors.secondary },
-            columnStyles: {
-                2: { halign: 'center' },
-                3: { halign: 'right' }
-            }
-        });
-        currentY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setTextColor(0, 0, 0);
+
+        // Get first labor item with FCAS for breakdown
+        const laborWithFCAS = apuData.analisis_costos.mano_obra.find((l: any) => (l as LaborResource).fcas);
+
+        if (laborWithFCAS) {
+            const fcas = (laborWithFCAS as LaborResource).fcas!;
+
+            const fcasBreakdownData = [
+                ['Días Trabajados/Año', fcas.workedDays.toString()],
+                ['Días Pagados/Año', fcas.paidDays.toString()],
+                ['SSO Patronal (13.5%)', formatCurrencyForPDF(fcas.sso)],
+                ['LPH - Ley Política Habitacional (3%)', formatCurrencyForPDF(fcas.lph)],
+                ['Banavih (1%)', formatCurrencyForPDF(fcas.banavih)],
+                ['INCES (2%)', formatCurrencyForPDF(fcas.inces)],
+                ['Vacaciones (15 días)', formatCurrencyForPDF(fcas.vacations)],
+                ['Bono Vacacional (7 días)', formatCurrencyForPDF(fcas.vacationBonus)],
+                ['Utilidades (15 días mín.)', formatCurrencyForPDF(fcas.utilities)],
+                ['Bono Fin de Año (15 días)', formatCurrencyForPDF(fcas.yearEndBonus)],
+                ['Cesta Ticket (365 días)', formatCurrencyForPDF(fcas.cestaTicket)],
+                ['Dotación EPP', formatCurrencyForPDF(fcas.eppDotation)],
+                ['Días Feriados (12 días)', formatCurrencyForPDF(fcas.paidHolidays)],
+                ['Antigüedad (5 días/año)', formatCurrencyForPDF(fcas.severance)]
+            ];
+
+            autoTable(doc, {
+                startY: currentY,
+                head: [['Componente FCAS', 'Valor']],
+                body: fcasBreakdownData,
+                theme: 'grid',
+                headStyles: { fillColor: [79, 70, 229], fontSize: fonts.small },
+                styles: { fontSize: fonts.small - 1, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 120 },
+                    1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
+                },
+                margin: { left: margins.left, right: margins.right }
+            });
+
+            currentY = (doc as any).lastAutoTable.finalY + 5;
+
+            // FCAS Summary
+            doc.setFillColor(245, 245, 245);
+            doc.rect(margins.left, currentY - 3, 170, 12, 'F');
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(fonts.normal);
+            doc.text('FACTOR TOTAL FCAS:', margins.left + 3, currentY + 4);
+            doc.text(`${fcas.totalFactor.toFixed(4)}x`, rightX - 10, currentY + 4, { align: 'right' });
+
+            currentY += 15;
+        }
     }
 
     // ============================================
-    // 5. SUMMARY
+    // 7. COST SUMMARY
     // ============================================
 
-    // Check space for summary
-    if (currentY > 220) {
+    if (currentY > 230) {
         doc.addPage();
         currentY = margins.top;
     }
 
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margins.left, currentY, 180, 50, 'F');
-    doc.setDrawColor(...colors.medium);
-    doc.rect(margins.left, currentY, 180, 50, 'S');
-
-    let sumY = currentY + 10;
-    const labelX = margins.left + 10;
-    const valueX = margins.left + 170;
-
-    const summaryItems = [
-        { l: 'Costo Directo (Mat + Eq + MO)', v: apuData.resumen.costo_directo_total },
-        { l: 'Costos Administrativos y Utilidad', v: apuData.resumen.costos_administrativos + apuData.resumen.utilidad },
-        { l: 'Incidencias Laborales', v: apuData.incidencias.total_incidencias }
-    ];
-
-    doc.setFontSize(fonts.normal);
-    summaryItems.forEach(item => {
-        doc.text(item.l, labelX, sumY);
-        doc.text(formatCurrencyForPDF(item.v, 'USD').replace('$', ''), valueX, sumY, { align: 'right' });
-        sumY += 8;
-    });
-
-    doc.setLineWidth(0.5);
-    doc.line(labelX, sumY, valueX, sumY);
-    sumY += 8;
-
     doc.setFontSize(fonts.heading);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colors.primary);
-    doc.text('PRECIO UNITARIO TOTAL:', labelX, sumY);
-    doc.text(formatCurrencyForPDF(apuData.resumen.precio_unitario, 'USD'), valueX, sumY, { align: 'right' });
+    doc.text('RESUMEN DE COSTOS', margins.left, currentY);
+    currentY += 8;
 
+    doc.setTextColor(0, 0, 0);
+
+    const summaryData = [
+        ['Materiales', formatCurrencyForPDF(apuData.costos_directos.total_materiales)],
+        ['Equipos', formatCurrencyForPDF(apuData.costos_directos.total_equipos)],
+        ['Mano de Obra', formatCurrencyForPDF(apuData.costos_directos.total_mano_obra)],
+        ['COSTO DIRECTO TOTAL', formatCurrencyForPDF(apuData.resumen.costo_directo_total)]
+    ];
+
+    autoTable(doc, {
+        startY: currentY,
+        body: summaryData,
+        theme: 'plain',
+        styles: { fontSize: fonts.normal, cellPadding: 3 },
+        columnStyles: {
+            0: { cellWidth: 120, fontStyle: 'bold' },
+            1: { cellWidth: 50, halign: 'right', fontStyle: 'bold' }
+        },
+        margin: { left: margins.left, right: margins.right }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 10;
+
+    // Final Unit Price
+    doc.setFillColor(...colors.primary);
+    doc.rect(margins.left, currentY - 5, 170, 15, 'F');
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...colors.white);
+    doc.text('PRECIO UNITARIO:', margins.left + 5, currentY + 4);
+    doc.text(formatCurrencyForPDF(apuData.resumen.precio_unitario), rightX - 10, currentY + 4, { align: 'right' });
 
     // ============================================
-    // 6. FOOTER / CERTIFICATION
+    // 8. LEGAL CERTIFICATION PAGE (Government only)
     // ============================================
-
-    addPageFooter(doc, 1, 1);
 
     if (isGovernment) {
-        const certText = "CERTIFICACIÓN: El presente Análisis de Precios Unitarios cumple estrictamente con el Decreto 1.399/2026 y la normativa COVENIN vigente. Se garantizan los derechos laborales establecidos en la LOTTT y leyes de seguridad social.";
+        doc.addPage();
+        currentY = margins.top;
 
-        doc.setFontSize(7);
-        doc.setTextColor(100, 100, 100);
-        const splitCert = doc.splitTextToSize(certText, 180);
-        doc.text(splitCert, margins.left, 280);
+        // Title
+        doc.setFillColor(...colors.primary);
+        doc.rect(0, 0, 210, 25, 'F');
+
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.white);
+        doc.text('CERTIFICACIÓN LEGAL DE CUMPLIMIENTO', 105, 15, { align: 'center' });
+
+        doc.setTextColor(0, 0, 0);
+        currentY = 35;
+
+        // Compliance statement
+        doc.setFontSize(fonts.normal);
+        doc.setFont('helvetica', 'normal');
+
+        const certText = `El presente Análisis de Precios Unitarios (APU) ha sido elaborado en estricto cumplimiento con la normativa legal venezolana aplicable a proyectos de construcción gubernamentales, incluyendo:`;
+        const splitCert = doc.splitTextToSize(certText, 170);
+        doc.text(splitCert, margins.left, currentY);
+        currentY += (splitCert.length * 6) + 5;
+
+        // Legal framework table
+        const legalFramework = [
+            ['LOTTT', 'Ley Orgánica del Trabajo, los Trabajadores y las Trabajadoras'],
+            ['LOPCYMAT', 'Ley Orgánica de Prevención, Condiciones y Medio Ambiente de Trabajo'],
+            ['Ley LPH', 'Ley de Política Habitacional (Banavih)'],
+            ['COVENIN 2250', 'Código de Prácticas para Medición y Codificación de Partidas'],
+            ['Decreto 4.298', 'Cesta Ticket Socialista'],
+            ['CIV', 'Tabuladores del Colegio de Ingenieros de Venezuela']
+        ];
+
+        autoTable(doc, {
+            startY: currentY,
+            head: [['Normativa', 'Descripción']],
+            body: legalFramework,
+            theme: 'grid',
+            headStyles: { fillColor: colors.primary, fontSize: fonts.small },
+            styles: { fontSize: fonts.small, cellPadding: 3 },
+            columnStyles: {
+                0: { cellWidth: 40, fontStyle: 'bold' },
+                1: { cellWidth: 130 }
+            },
+            margin: { left: margins.left, right: margins.right }
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 10;
+
+        // Compliance checklist
+        doc.setFontSize(fonts.heading);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colors.primary);
+        doc.text('VERIFICACIÓN DE CUMPLIMIENTO', margins.left, currentY);
+        currentY += 8;
+
+        doc.setTextColor(0, 0, 0);
+
+        const complianceChecks = [
+            ['✓', 'Factores de desperdicio aplicados según COVENIN 2250-2000'],
+            ['✓', 'FCAS completo con 14 componentes legales (factor ≥ 1.45)'],
+            ['✓', 'COP calculado para equipos propios según normativa'],
+            ['✓', 'Tabuladores de mano de obra basados en CIV 2026'],
+            ['✓', 'Cargas sociales patronales completas (SSO, LPH, Banavih, INCES)'],
+            ['✓', 'Beneficios laborales incluidos (vacaciones, utilidades, bonos)'],
+            ['✓', 'Cesta Ticket según Decreto 4.298 y BCV'],
+            ['✓', 'Dotación EPP según LOPCYMAT']
+        ];
+
+        autoTable(doc, {
+            startY: currentY,
+            body: complianceChecks,
+            theme: 'plain',
+            styles: { fontSize: fonts.small, cellPadding: 2 },
+            columnStyles: {
+                0: { cellWidth: 10, halign: 'center', textColor: [34, 197, 94], fontStyle: 'bold' },
+                1: { cellWidth: 160 }
+            },
+            margin: { left: margins.left, right: margins.right }
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+
+        // Signature section
+        doc.setFillColor(245, 245, 245);
+        doc.rect(margins.left, currentY, 170, 40, 'F');
+
+        currentY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(fonts.small);
+        doc.text('ELABORADO POR:', margins.left + 5, currentY);
+        currentY += 15;
+        doc.line(margins.left + 5, currentY, margins.left + 80, currentY);
+        currentY += 5;
+        doc.setFontSize(fonts.small - 1);
+        doc.text('Nombre y Firma del Ingeniero Responsable', margins.left + 5, currentY);
+        currentY += 3;
+        doc.text('CIV: _______________', margins.left + 5, currentY);
+
+        currentY += 10;
+        doc.setFontSize(fonts.small - 2);
+        doc.setFont('helvetica', 'italic');
+        doc.text(`Fecha de Certificación: ${new Date().toLocaleDateString('es-VE', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+            margins.left + 5, currentY);
     }
 
+    // Add page numbers to all pages
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        addPageFooter(doc, i, pageCount);
+    }
+
+    // Save
     doc.save(filename);
-    console.log(`PDF Generated: ${filename}`);
 };

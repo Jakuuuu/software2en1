@@ -388,6 +388,131 @@ export default function ProjectConfigPage() {
                                     </div>
                                 </div>
 
+                                {/* GOVERNMENT MODE */}
+                                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mt-6">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.legalConfig.isGovernmentProject || false}
+                                            onChange={(e) => handleLegalChange('isGovernmentProject', e.target.checked)}
+                                            className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300"
+                                        />
+                                        <span className="font-bold text-indigo-900">Proyecto Gubernamental</span>
+                                    </div>
+                                    <p className="text-xs text-indigo-700 ml-8">
+                                        Activa validaciones de cumplimiento para PDVSA, MinObras, GMVV, etc.
+                                    </p>
+                                </div>
+
+                                {/* FCAS COMPLETE PARAMETERS */}
+                                <h3 className="text-lg font-bold text-slate-800 border-b pb-2 pt-4">Parámetros FCAS (Factor de Costos Asociados al Salario)</h3>
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Días Trabajados/Año</label>
+                                        <input
+                                            type="number"
+                                            value={formData.legalConfig.workedDaysPerYear || 260}
+                                            onChange={(e) => handleLegalChange('workedDaysPerYear', Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                        />
+                                        <p className="text-xs text-slate-500">Generalmente 260 días (52 semanas × 5 días)</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Días Pagados/Año</label>
+                                        <input
+                                            type="number"
+                                            value={formData.legalConfig.paidDaysPerYear || 365}
+                                            onChange={(e) => handleLegalChange('paidDaysPerYear', Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                        />
+                                        <p className="text-xs text-slate-500">365 días (incluye feriados, vacaciones, etc.)</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Banavih (%)</label>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={(formData.legalConfig.banavihRate || 0.01) * 100}
+                                                onChange={(e) => handleLegalChange('banavihRate', Number(e.target.value) / 100)}
+                                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                            />
+                                            <span className="text-slate-500">%</span>
+                                        </div>
+                                        <p className="text-xs text-slate-500">Ley de Política Habitacional (1%)</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Cesta Ticket (Bs/día)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={formData.legalConfig.cestaTicketDaily || 130}
+                                            onChange={(e) => handleLegalChange('cestaTicketDaily', Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                        />
+                                        <p className="text-xs text-slate-500">Según Decreto 4.298 y BCV</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Dotación EPP (USD/año)</label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={formData.legalConfig.eppDotationYearly || 100}
+                                            onChange={(e) => handleLegalChange('eppDotationYearly', Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                        />
+                                        <p className="text-xs text-slate-500">Equipos de Protección Personal (LOPCYMAT)</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Días Feriados/Año</label>
+                                        <input
+                                            type="number"
+                                            value={formData.legalConfig.paidHolidaysPerYear || 12}
+                                            onChange={(e) => handleLegalChange('paidHolidaysPerYear', Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                        />
+                                        <p className="text-xs text-slate-500">Días feriados nacionales pagados</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Bono Vacacional (días)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.legalConfig.vacationBonusDays || 7}
+                                            onChange={(e) => handleLegalChange('vacationBonusDays', Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                        />
+                                        <p className="text-xs text-slate-500">LOTTT Art. 192 (7 días + 1 día/año)</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Bono Fin de Año (días)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.legalConfig.yearEndBonusDays || 15}
+                                            onChange={(e) => handleLegalChange('yearEndBonusDays', Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                        />
+                                        <p className="text-xs text-slate-500">Mínimo 15 días según LOTTT</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-slate-700">Antigüedad (días/año)</label>
+                                        <input
+                                            type="number"
+                                            value={formData.legalConfig.severanceDaysPerYear || 5}
+                                            onChange={(e) => handleLegalChange('severanceDaysPerYear', Number(e.target.value))}
+                                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                                        />
+                                        <p className="text-xs text-slate-500">LOTTT Art. 142 (5 días/año)</p>
+                                    </div>
+                                </div>
+
                                 <h3 className="text-lg font-bold text-slate-800 border-b pb-2 pt-4">Leyes Laborales</h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center gap-3">
@@ -426,3 +551,4 @@ export default function ProjectConfigPage() {
         </div>
     );
 }
+

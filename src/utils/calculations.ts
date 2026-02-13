@@ -2,7 +2,80 @@
 // VENEZUELAN LEGAL CALCULATIONS
 // ============================================
 
-import { Resource, LaborResource, LegalConfig, Partida } from '../types';
+import { Resource, LaborResource, LegalConfig, Partida, MaterialResource, EquipmentResource } from '../types';
+
+// ============================================
+// MATERIAL WASTE FACTOR CALCULATIONS
+// ============================================
+
+/**
+ * Calculate effective quantity with waste factor
+ * COVENIN 2250-2000 Cap. 4 Art. 12
+ */
+export const calculateMaterialWithWaste = (
+    quantity: number,
+    wasteFactor: number
+): number => {
+    return quantity * (1 + wasteFactor);
+};
+
+/**
+ * Calculate total cost including waste
+ */
+export const calculateMaterialTotalWithWaste = (
+    quantity: number,
+    unitPrice: number,
+    wasteFactor: number
+): number => {
+    const effectiveQuantity = calculateMaterialWithWaste(quantity, wasteFactor);
+    return effectiveQuantity * unitPrice;
+};
+
+// ============================================
+// EQUIPMENT COP (Costo de Posesión y Operación)
+// ============================================
+
+/**
+ * Calculate COP for owned equipment
+ * COVENIN 2250-2000 Cap. 4 Art. 15
+ */
+export const calculateCOP = (equipment: {
+    acquisitionValue: number;
+    residualValue: number;
+    usefulLifeHours: number;
+    interestRate: number;
+    insuranceRate: number;
+    maintenanceCostPerHour: number;
+    operationCostPerHour: number;
+}): number => {
+    const {
+        acquisitionValue,
+        residualValue,
+        usefulLifeHours,
+        interestRate,
+        insuranceRate,
+        maintenanceCostPerHour,
+        operationCostPerHour
+    } = equipment;
+
+    // Depreciación = (Valor - Valor Residual) / Vida Útil
+    const depreciation = (acquisitionValue - residualValue) / usefulLifeHours;
+
+    // Intereses = (Valor × Tasa × Vida Útil / 2) / Vida Útil
+    const interests = (acquisitionValue * interestRate * usefulLifeHours / 2) / usefulLifeHours;
+
+    // Seguros = (Valor × % Seguro) / Vida Útil
+    const insurance = (acquisitionValue * insuranceRate) / usefulLifeHours;
+
+    // COP = (Depreciación + Intereses + Seguros) + Mantenimiento + Operación
+    const cop = depreciation + interests + insurance + maintenanceCostPerHour + operationCostPerHour;
+
+    return cop;
+};
+
+// ============================================
+// VENEZUELAN LEGAL CHARGES
+// ============================================
 
 /**
  * Calculate LOPCYMAT (Ley Orgánica de Prevención, Condiciones y Medio Ambiente de Trabajo)
@@ -23,14 +96,112 @@ export const calculateINCES = (labor: Resource[]): number => {
 };
 
 /**
+ * ============================================
+ * FCAS COMPLETO (Factor de Costos Asociados al Salario)
+ * ============================================
+ * 
+ * Calcula TODOS los componentes legales de mano de obra en Venezuela
+ * Cumple con: LOTTT, LOPCYMAT, Ley LPH, Decreto 4.298
+ */
+export const calculateFCAS = (
+    baseSalary: number,
+    config?: LegalConfig
+): {
+    workedDays: number;
+    paidDays: number;
+    sso: number;
+    lph: number;
+    banavih: number;
+    inces: number;
+    vacations: number;
+    vacationBonus: number;
+    utilities: number;
+    yearEndBonus: number;
+    cestaTicket: number;
+    eppDotation: number;
+    paidHolidays: number;
+    severance: number;
+    totalCharges: number;
+    totalFactor: number;
+    totalCost: number;
+} => {
+    // Días trabajados vs pagados (LOTTT Art. 173)
+    const workedDays = config?.workedDaysPerYear || 260;
+    const paidDays = config?.paidDaysPerYear || 365;
+
+    // Cargas sociales sobre salario base
+    const sso = baseSalary * (config?.ssoRate || 0.135); // 13.5% SSO Patronal
+    const lph = baseSalary * (config?.lphRate || 0.03); // 3% LPH
+    const banavih = baseSalary * (config?.banavihRate || 0.01); // 1% Banavih
+    const inces = baseSalary * (config?.incesRate || 0.02); // 2% INCES
+
+    // Días adicionales pagados (LOTTT)
+    const vacationDays = 15; // LOTTT Art. 190
+    const vacations = baseSalary * (vacationDays / workedDays);
+
+    const vacationBonusDays = config?.vacationBonusDays || 7; // LOTTT Art. 192
+    const vacationBonus = baseSalary * (vacationBonusDays / workedDays);
+
+    const utilitiesDays = 15; // LOTTT Art. 174 (mínimo)
+    const utilities = baseSalary * (utilitiesDays / workedDays);
+
+    const yearEndBonusDays = config?.yearEndBonusDays || 15;
+    const yearEndBonus = baseSalary * (yearEndBonusDays / workedDays);
+
+    const paidHolidaysDays = config?.paidHolidaysPerYear || 12;
+    const paidHolidays = baseSalary * (paidHolidaysDays / workedDays);
+
+    // Antigüedad (LOTTT Art. 142) - simplificado a 5 días/año
+    const severanceDays = config?.severanceDaysPerYear || 5;
+    const severance = baseSalary * (severanceDays / workedDays);
+
+    // Beneficios fijos
+    // Cesta Ticket (Decreto 4.298) - convertir de Bs a USD si es necesario
+    const cestaTicketBs = config?.cestaTicketDaily || 130; // Bs/día
+    const exchangeRate = 36.50; // TODO: Obtener de BCV
+    const cestaTicketUSD = (cestaTicketBs / exchangeRate) * paidDays;
+    const cestaTicket = cestaTicketUSD;
+
+    // Dotación EPP (LOPCYMAT Art. 56) - 2 veces al año
+    const eppDotationYearly = config?.eppDotationYearly || 100; // USD/año
+    const eppDotation = eppDotationYearly / workedDays;
+
+    // Total de cargas
+    const totalCharges = sso + lph + banavih + inces + vacations + vacationBonus +
+        utilities + yearEndBonus + cestaTicket + eppDotation +
+        paidHolidays + severance;
+
+    // Factor total (cuánto cuesta realmente $1 de salario)
+    const totalFactor = 1 + (totalCharges / baseSalary);
+
+    // Costo total
+    const totalCost = baseSalary + totalCharges;
+
+    return {
+        workedDays,
+        paidDays,
+        sso,
+        lph,
+        banavih,
+        inces,
+        vacations,
+        vacationBonus,
+        utilities,
+        yearEndBonus,
+        cestaTicket,
+        eppDotation,
+        paidHolidays,
+        severance,
+        totalCharges,
+        totalFactor,
+        totalCost
+    };
+};
+
+/**
  * Calculate SSO (Seguro Social Obligatorio) and all social charges
- * Venezuela social charges breakdown:
- * - SSO Patronal: 11% + 2% (Paro Forzoso) + 0.5% (INPSASEL) = 13.5%
- * - LPH (Ley Política Habitacional): 3%
- * - INCES: 2%
- * - Vacaciones: ~15%
- * - Utilidades: ~15%
- * Total: ~48.5%
+ * LEGACY FUNCTION - Use calculateFCAS for complete calculations
+ * Kept for backward compatibility
  */
 export const calculateSocialCharges = (
     laborCost: number,
