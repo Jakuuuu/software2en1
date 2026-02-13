@@ -7,8 +7,10 @@ import { validateGovernmentCompliance, getComplianceSummary } from '../utils/com
 import { getWasteFactorByDescription } from '../data/tabuladores';
 import { calculateMaterialWithWaste, calculateCOP, calculateFCAS } from '../utils/calculations';
 import { InsumoSelector } from './InsumoSelector';
+import { PartidaSelector } from './PartidaSelector';
 import { useInsumos } from '@/hooks/useInsumos';
-import { Bot, FileText, Loader2, Save, X, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { Bot, FileText, Loader2, Save, X, AlertCircle, CheckCircle, RefreshCw, Library } from 'lucide-react';
+import { PartidaReference } from '@/data/partidasReference';
 
 interface APUEditorProps {
     partida: Partida;
@@ -557,6 +559,7 @@ export const APUEditor = ({ partida, onSave, onClose, isGovernmentProject = fals
     const [labor, setLabor] = useState<LaborResource[]>((partida.apu?.labor as LaborResource[]) || []);
 
     const [loading, setLoading] = useState(false);
+    const [showPartidaSelector, setShowPartidaSelector] = useState(false);
     const [clientType, setClientType] = useState<'GUBERNAMENTAL' | 'PRIVADO'>(isGovernmentProject ? 'GUBERNAMENTAL' : 'PRIVADO');
     const [generatedIncidences, setGeneratedIncidences] = useState<any>(partida.apu?.legalCharges || null);
 
@@ -702,6 +705,35 @@ export const APUEditor = ({ partida, onSave, onClose, isGovernmentProject = fals
         }
     };
 
+    const handleImportPartida = (refPartida: PartidaReference) => {
+        if (confirm(`¿Está seguro de reemplazar el análisis actual con "${refPartida.description}"?`)) {
+            // Replace materials
+            const newMaterials = refPartida.apu.materials.map(m => ({
+                ...m,
+                id: Math.random().toString(36).substr(2, 9),
+                priceSource: 'MARKET' as const
+            }));
+            setMaterials(newMaterials);
+
+            // Replace equipment
+            const newEquipment = refPartida.apu.equipment.map(e => ({
+                ...e,
+                id: Math.random().toString(36).substr(2, 9),
+                ownershipType: 'RENTED' as const
+            }));
+            setEquipment(newEquipment);
+
+            // Replace labor
+            const newLabor = refPartida.apu.labor.map(l => ({
+                ...l,
+                id: Math.random().toString(36).substr(2, 9)
+            }));
+            setLabor(newLabor);
+
+            setShowPartidaSelector(false);
+        }
+    };
+
     const handleSave = () => {
         const updatedPartida: Partida = {
             ...partida,
@@ -755,6 +787,15 @@ export const APUEditor = ({ partida, onSave, onClose, isGovernmentProject = fals
                             {loading ? 'Generando...' : 'Autocompletar con IA'}
                         </button>
 
+                        <button
+                            onClick={() => setShowPartidaSelector(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 font-medium transition-all"
+                            title="Importar de Base de Datos"
+                        >
+                            <Library className="w-4 h-4" />
+                            <span>Importar BD</span>
+                        </button>
+
                         <div className="text-right border-l pl-4 border-slate-200">
                             <div className="text-xs text-slate-500 font-medium uppercase tracking-wider">Precio Unitario</div>
                             <div className="text-2xl font-bold text-slate-900">${newUnitPrice.toFixed(2)}</div>
@@ -802,25 +843,40 @@ export const APUEditor = ({ partida, onSave, onClose, isGovernmentProject = fals
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="px-6 py-4 border-t border-slate-200 bg-white rounded-b-xl flex justify-between items-center sticky bottom-0">
+                {/* Footer Buttons */}
+                <div className="p-4 border-t border-slate-200 flex justify-end gap-3 bg-white rounded-b-xl sticky bottom-0 z-10 w-full backdrop-blur-md bg-white/90">
                     <button
                         onClick={handleDownloadPDF}
-                        className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors font-medium border border-transparent hover:border-slate-200"
+                        className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
                     >
                         <FileText className="w-4 h-4" />
                         Descargar PDF
                     </button>
-
-                    <div className="flex gap-3">
-                        <button onClick={onClose} className="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium transition-colors">Cancelar</button>
-                        <button onClick={handleSave} className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-lg shadow-blue-500/30 transition-all">
-                            <Save className="w-4 h-4" />
-                            Guardar Cambios
-                        </button>
-                    </div>
+                    <button
+                        onClick={onClose}
+                        className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        className="flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg shadow-indigo-500/30 transition-all font-medium transform active:scale-95"
+                    >
+                        <Save className="w-4 h-4" />
+                        Guardar Análisis
+                    </button>
                 </div>
+
+                {/* Selector Modal */}
+                {showPartidaSelector && (
+                    <PartidaSelector
+                        onSelect={handleImportPartida}
+                        onClose={() => setShowPartidaSelector(false)}
+                    />
+                )}
             </div>
         </div>
     );
 };
+
+

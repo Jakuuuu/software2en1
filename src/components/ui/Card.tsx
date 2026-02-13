@@ -21,14 +21,14 @@ export const Card = ({
 }: CardProps) => {
     return (
         <div
-            className={`bg-white border border-slate-200 rounded-xl shadow-sm transition-all duration-200 ${className}`}
+            className={`tech-card transition-all duration-300 hover:shadow-glow-md hover:border-primary-500/30 group ${className}`}
             {...props}
         >
             {(title || description || action) && (
-                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center">
                     <div>
-                        {title && <h3 className="text-lg font-semibold text-slate-800">{title}</h3>}
-                        {description && <p className="text-sm text-slate-500 mt-1">{description}</p>}
+                        {title && <h3 className="text-lg font-bold text-slate-100 group-hover:text-primary-400 transition-colors">{title}</h3>}
+                        {description && <p className="text-sm text-slate-400 mt-1">{description}</p>}
                     </div>
                     {action && <div>{action}</div>}
                 </div>
@@ -37,7 +37,7 @@ export const Card = ({
                 {children}
             </div>
             {footer && (
-                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl">
+                <div className="px-6 py-4 bg-slate-900/50 border-t border-white/5 rounded-b-xl backdrop-blur-sm">
                     {footer}
                 </div>
             )}

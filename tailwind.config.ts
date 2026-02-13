@@ -15,8 +15,8 @@ const config: Config = {
                 "tech-pattern": "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2394a3b8' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
             },
             colors: {
-                background: "var(--background)",
-                foreground: "var(--foreground)",
+                background: "#0f172a", // Deep Slate 900
+                foreground: "#f8fafc", // Slate 50
                 primary: {
                     50: '#f0f9ff',
                     100: '#e0f2fe',
@@ -43,6 +43,16 @@ const config: Config = {
                     900: '#0f172a',
                     950: '#020617',
                 },
+                // Futuristic Accents
+                cyber: {
+                    500: '#00f0ff', // Cyan Neon
+                    600: '#00d0ff',
+                    900: '#0090ff',
+                },
+                neon: {
+                    green: '#00ff9d',
+                    purple: '#b026ff',
+                },
                 success: {
                     50: '#ecfdf5',
                     500: '#10b981',
@@ -59,6 +69,22 @@ const config: Config = {
                     700: '#b91c1c',
                 },
             },
+            boxShadow: {
+                'glow-sm': '0 0 10px rgba(14, 165, 233, 0.3)',
+                'glow-md': '0 0 20px rgba(14, 165, 233, 0.5)',
+                'glow-lg': '0 0 30px rgba(14, 165, 233, 0.6)',
+                'neon-blue': '0 0 5px #00f0ff, 0 0 10px #00f0ff, 0 0 20px #00f0ff',
+            },
+            animation: {
+                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'float': 'float 3s ease-in-out infinite',
+            },
+            keyframes: {
+                float: {
+                    '0%, 100%': { transform: 'translateY(0)' },
+                    '50%': { transform: 'translateY(-5px)' },
+                }
+            }
         },
     },
     plugins: [],
