@@ -109,15 +109,15 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
                     ...baseRow,
                     wastePct,
                     effectiveQty,
-                    formatCurrencyForPDF(m.precio_unitario),
-                    formatCurrencyForPDF(m.total)
+                    formatCurrencyForPDF(m.precio_unitario, 'VES'),
+                    formatCurrencyForPDF(m.total, 'VES')
                 ];
             }
 
             return [
                 ...baseRow,
-                formatCurrencyForPDF(m.precio_unitario),
-                formatCurrencyForPDF(m.total)
+                formatCurrencyForPDF(m.precio_unitario, 'VES'),
+                formatCurrencyForPDF(m.total, 'VES')
             ];
         });
 
@@ -154,7 +154,7 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
 
         // Subtotal
         doc.setFont('helvetica', 'bold');
-        doc.text(`Subtotal Materiales: ${formatCurrencyForPDF(apuData.costos_directos.total_materiales)}`,
+        doc.text(`Subtotal Materiales: ${formatCurrencyForPDF(apuData.costos_directos.total_materiales, 'VES')}`,
             rightX, currentY, { align: 'right' });
         currentY += 8;
     }
@@ -192,15 +192,15 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
                 return [
                     ...baseRow,
                     ownershipType,
-                    formatCurrencyForPDF(e.precio_unitario),
-                    formatCurrencyForPDF(e.total)
+                    formatCurrencyForPDF(e.precio_unitario, 'VES'),
+                    formatCurrencyForPDF(e.total, 'VES')
                 ];
             }
 
             return [
                 ...baseRow,
-                formatCurrencyForPDF(e.precio_unitario),
-                formatCurrencyForPDF(e.total)
+                formatCurrencyForPDF(e.precio_unitario, 'VES'),
+                formatCurrencyForPDF(e.total, 'VES')
             ];
         });
 
@@ -233,7 +233,7 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
         currentY = (doc as any).lastAutoTable.finalY + 3;
 
         doc.setFont('helvetica', 'bold');
-        doc.text(`Subtotal Equipos: ${formatCurrencyForPDF(apuData.costos_directos.total_equipos)}`,
+        doc.text(`Subtotal Equipos: ${formatCurrencyForPDF(apuData.costos_directos.total_equipos, 'VES')}`,
             rightX, currentY, { align: 'right' });
         currentY += 8;
     }
@@ -269,16 +269,16 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
             if (isGovernment && lab.fcas) {
                 return [
                     ...baseRow,
-                    formatCurrencyForPDF(l.precio_unitario),
+                    formatCurrencyForPDF(l.precio_unitario, 'VES'),
                     `${lab.fcas.totalFactor.toFixed(2)}x`,
-                    formatCurrencyForPDF(l.total)
+                    formatCurrencyForPDF(l.total, 'VES')
                 ];
             }
 
             return [
                 ...baseRow,
-                formatCurrencyForPDF(l.precio_unitario),
-                formatCurrencyForPDF(l.total)
+                formatCurrencyForPDF(l.precio_unitario, 'VES'),
+                formatCurrencyForPDF(l.total, 'VES')
             ];
         });
 
@@ -311,7 +311,7 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
         currentY = (doc as any).lastAutoTable.finalY + 3;
 
         doc.setFont('helvetica', 'bold');
-        doc.text(`Subtotal Mano de Obra: ${formatCurrencyForPDF(apuData.costos_directos.total_mano_obra)}`,
+        doc.text(`Subtotal Mano de Obra: ${formatCurrencyForPDF(apuData.costos_directos.total_mano_obra, 'VES')}`,
             rightX, currentY, { align: 'right' });
         currentY += 8;
     }
@@ -342,26 +342,27 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
         doc.setTextColor(0, 0, 0);
 
         // Get first labor item with FCAS for breakdown
-        const laborWithFCAS = apuData.analisis_costos.mano_obra.find((l: any) => (l as LaborResource).fcas);
+        // Get first labor item with FCAS for breakdown
+        const laborWithFCAS = apuData.analisis_costos.mano_obra.find((l: any) => l.fcas);
 
         if (laborWithFCAS) {
-            const fcas = (laborWithFCAS as LaborResource).fcas!;
+            const fcas = laborWithFCAS.fcas!;
 
             const fcasBreakdownData = [
-                ['Días Trabajados/Año', fcas.workedDays.toString()],
-                ['Días Pagados/Año', fcas.paidDays.toString()],
-                ['SSO Patronal (13.5%)', formatCurrencyForPDF(fcas.sso)],
-                ['LPH - Ley Política Habitacional (3%)', formatCurrencyForPDF(fcas.lph)],
-                ['Banavih (1%)', formatCurrencyForPDF(fcas.banavih)],
-                ['INCES (2%)', formatCurrencyForPDF(fcas.inces)],
-                ['Vacaciones (15 días)', formatCurrencyForPDF(fcas.vacations)],
-                ['Bono Vacacional (7 días)', formatCurrencyForPDF(fcas.vacationBonus)],
-                ['Utilidades (15 días mín.)', formatCurrencyForPDF(fcas.utilities)],
-                ['Bono Fin de Año (15 días)', formatCurrencyForPDF(fcas.yearEndBonus)],
-                ['Cesta Ticket (365 días)', formatCurrencyForPDF(fcas.cestaTicket)],
-                ['Dotación EPP', formatCurrencyForPDF(fcas.eppDotation)],
-                ['Días Feriados (12 días)', formatCurrencyForPDF(fcas.paidHolidays)],
-                ['Antigüedad (5 días/año)', formatCurrencyForPDF(fcas.severance)]
+                ['Días Trabajados/Año', fcas.workedDaysPerYear.toString()],
+                ['Días Pagados/Año', fcas.paidDaysPerYear.toString()],
+                ['SSO Patronal (13.5%)', formatCurrencyForPDF(fcas.sso, 'VES')],
+                ['LPH - Ley Política Habitacional (3%)', formatCurrencyForPDF(fcas.lph, 'VES')],
+                ['Banavih (1%)', formatCurrencyForPDF(fcas.banavih, 'VES')],
+                ['INCES (2%)', formatCurrencyForPDF(fcas.inces, 'VES')],
+                ['Vacaciones (15 días)', formatCurrencyForPDF(fcas.vacations, 'VES')],
+                ['Bono Vacacional (7 días)', formatCurrencyForPDF(fcas.vacationBonus, 'VES')],
+                ['Utilidades (15 días mín.)', formatCurrencyForPDF(fcas.utilities, 'VES')],
+                ['Bono Fin de Año (15 días)', formatCurrencyForPDF(fcas.yearEndBonus, 'VES')],
+                ['Cesta Ticket (365 días)', formatCurrencyForPDF(fcas.cestaTicket, 'VES')],
+                ['Dotación EPP', formatCurrencyForPDF(fcas.eppDotation, 'VES')],
+                ['Días Feriados (12 días)', formatCurrencyForPDF(fcas.paidHolidays, 'VES')],
+                ['Antigüedad (5 días/año)', formatCurrencyForPDF(fcas.severance, 'VES')]
             ];
 
             autoTable(doc, {
@@ -411,10 +412,10 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
     doc.setTextColor(0, 0, 0);
 
     const summaryData = [
-        ['Materiales', formatCurrencyForPDF(apuData.costos_directos.total_materiales)],
-        ['Equipos', formatCurrencyForPDF(apuData.costos_directos.total_equipos)],
-        ['Mano de Obra', formatCurrencyForPDF(apuData.costos_directos.total_mano_obra)],
-        ['COSTO DIRECTO TOTAL', formatCurrencyForPDF(apuData.resumen.costo_directo_total)]
+        ['Materiales', formatCurrencyForPDF(apuData.costos_directos.total_materiales, 'VES')],
+        ['Equipos', formatCurrencyForPDF(apuData.costos_directos.total_equipos, 'VES')],
+        ['Mano de Obra', formatCurrencyForPDF(apuData.costos_directos.total_mano_obra, 'VES')],
+        ['COSTO DIRECTO TOTAL', formatCurrencyForPDF(apuData.resumen.costo_directo_total, 'VES')]
     ];
 
     autoTable(doc, {
@@ -439,7 +440,7 @@ export const generateAPUPDF = (apuData: APUResponse, clientType: 'GUBERNAMENTAL'
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...colors.white);
     doc.text('PRECIO UNITARIO:', margins.left + 5, currentY + 4);
-    doc.text(formatCurrencyForPDF(apuData.resumen.precio_unitario), rightX - 10, currentY + 4, { align: 'right' });
+    doc.text(formatCurrencyForPDF(apuData.resumen.precio_unitario, 'VES'), rightX - 10, currentY + 4, { align: 'right' });
 
     // ============================================
     // 8. LEGAL CERTIFICATION PAGE (Government only)

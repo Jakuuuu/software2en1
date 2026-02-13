@@ -407,6 +407,7 @@ export interface APUResponse {
             precio_unitario: number;
             total: number;
             fcas_factor?: number; // Factor asociado al salario
+            fcas?: LaborResource['fcas']; // Objeto completo para desglose
         }[];
     };
     costos_directos: {

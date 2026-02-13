@@ -667,7 +667,8 @@ export const APUEditor = ({ partida, onSave, onClose, isGovernmentProject = fals
                     cantidad: l.quantity,
                     precio_unitario: l.unitPrice,
                     total: l.total,
-                    fcas_factor: isGovernmentProject ? (l.fcas?.totalFactor || 1.55) : 1
+                    fcas_factor: isGovernmentProject ? (l.fcas?.totalFactor || 1.55) : 1,
+                    fcas: isGovernmentProject ? l.fcas : undefined
                 }))
             },
             costos_directos: {
