@@ -38,7 +38,25 @@ export const DEFAULT_LEGAL_CONFIG: LegalConfig = {
     lphRate: 0.03, // 3%
     incesRate: 0.02, // 2%
     vacationsRate: 0.15, // 15%
-    utilitiesRateMO: 0.15 // 15%
+    utilitiesRateMO: 0.15, // 15%
+
+    // FCAS Complete Configuration (New Fields)
+    workedDaysPerYear: 260,
+    paidDaysPerYear: 365,
+    banavihRate: 0.01,
+    cestaTicketDaily: 130, // Bs/Day
+    eppDotationYearly: 100, // USD/Year
+    paidHolidaysPerYear: 12,
+    vacationBonusDays: 15,
+    yearEndBonusDays: 45, // Minimum legal is 15 but usually higher
+    severanceDaysPerYear: 5,
+
+    // Project Type and Requirements
+    isGovernmentProject: false,
+    requirePriceValidation: false,
+    requireWasteFactors: true,
+    requireCOPCalculation: true,
+    requireTabulators: false
 };
 
 // ============================================
