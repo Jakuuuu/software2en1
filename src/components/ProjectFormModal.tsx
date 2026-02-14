@@ -110,26 +110,31 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-slate-900/95 border border-white/10 rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-4xl w-full max-h-[90vh] overflow-y-auto text-slate-200">
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-                    <h2 className="text-2xl font-bold text-slate-800">Nuevo Proyecto</h2>
+                <div className="sticky top-0 bg-slate-900/95 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center z-10">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                        <span className="w-2 h-8 bg-primary-500 rounded-full shadow-[0_0_10px_#0ea5e9]"></span>
+                        Nuevo Proyecto
+                    </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                        className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white"
                     >
                         <X size={24} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                <form onSubmit={handleSubmit} className="p-6 space-y-8">
                     {/* Información General */}
                     <section>
-                        <h3 className="text-lg font-semibold text-slate-800 mb-4">Información General</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <h3 className="text-lg font-semibold text-primary-400 mb-4 flex items-center gap-2">
+                            01. I N F O R M A C I Ó N _ G E N E R A L
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Nombre del Proyecto *
                                 </label>
                                 <input
@@ -137,14 +142,14 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.name ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-4 py-2.5 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100 ${errors.name ? 'border-red-500/50' : 'border-slate-800'
                                         }`}
                                     placeholder="Torre Residencial A"
                                 />
-                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                                {errors.name && <p className="text-red-400 text-xs mt-1 font-mono">{errors.name}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Código del Proyecto *
                                 </label>
                                 <input
@@ -152,21 +157,23 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="code"
                                     value={formData.code}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.code ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-4 py-2.5 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100 font-mono ${errors.code ? 'border-red-500/50' : 'border-slate-800'
                                         }`}
                                     placeholder="PROJ-2024-001"
                                 />
-                                {errors.code && <p className="text-red-500 text-xs mt-1">{errors.code}</p>}
+                                {errors.code && <p className="text-red-400 text-xs mt-1 font-mono">{errors.code}</p>}
                             </div>
                         </div>
                     </section>
 
                     {/* Cliente */}
                     <section>
-                        <h3 className="text-lg font-semibold text-slate-800 mb-4">Cliente</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <h3 className="text-lg font-semibold text-primary-400 mb-4 flex items-center gap-2">
+                            02. C L I E N T E
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Nombre del Cliente *
                                 </label>
                                 <input
@@ -174,14 +181,14 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="clientName"
                                     value={formData.clientName}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.clientName ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-4 py-2.5 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100 ${errors.clientName ? 'border-red-500/50' : 'border-slate-800'
                                         }`}
                                     placeholder="Constructora XYZ C.A."
                                 />
-                                {errors.clientName && <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>}
+                                {errors.clientName && <p className="text-red-400 text-xs mt-1 font-mono">{errors.clientName}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     RIF del Cliente *
                                 </label>
                                 <input
@@ -189,14 +196,14 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="clientRIF"
                                     value={formData.clientRIF}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.clientRIF ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-4 py-2.5 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100 font-mono ${errors.clientRIF ? 'border-red-500/50' : 'border-slate-800'
                                         }`}
                                     placeholder="J-123456789"
                                 />
-                                {errors.clientRIF && <p className="text-red-500 text-xs mt-1">{errors.clientRIF}</p>}
+                                {errors.clientRIF && <p className="text-red-400 text-xs mt-1 font-mono">{errors.clientRIF}</p>}
                             </div>
-                            <div className="col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Dirección del Cliente
                                 </label>
                                 <input
@@ -204,7 +211,7 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="clientAddress"
                                     value={formData.clientAddress}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                                    className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100"
                                     placeholder="Av. Principal, Caracas"
                                 />
                             </div>
@@ -213,10 +220,12 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
 
                     {/* Contratista */}
                     <section>
-                        <h3 className="text-lg font-semibold text-slate-800 mb-4">Contratista</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <h3 className="text-lg font-semibold text-primary-400 mb-4 flex items-center gap-2">
+                            03. C O N T R A T I S T A
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Nombre del Contratista *
                                 </label>
                                 <input
@@ -224,14 +233,14 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="contractorName"
                                     value={formData.contractorName}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.contractorName ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-4 py-2.5 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100 ${errors.contractorName ? 'border-red-500/50' : 'border-slate-800'
                                         }`}
                                     placeholder="Mi Empresa C.A."
                                 />
-                                {errors.contractorName && <p className="text-red-500 text-xs mt-1">{errors.contractorName}</p>}
+                                {errors.contractorName && <p className="text-red-400 text-xs mt-1 font-mono">{errors.contractorName}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     RIF del Contratista *
                                 </label>
                                 <input
@@ -239,21 +248,23 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="contractorRIF"
                                     value={formData.contractorRIF}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.contractorRIF ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-4 py-2.5 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100 font-mono ${errors.contractorRIF ? 'border-red-500/50' : 'border-slate-800'
                                         }`}
                                     placeholder="J-987654321"
                                 />
-                                {errors.contractorRIF && <p className="text-red-500 text-xs mt-1">{errors.contractorRIF}</p>}
+                                {errors.contractorRIF && <p className="text-red-400 text-xs mt-1 font-mono">{errors.contractorRIF}</p>}
                             </div>
                         </div>
                     </section>
 
                     {/* Contrato */}
                     <section>
-                        <h3 className="text-lg font-semibold text-slate-800 mb-4">Contrato</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <h3 className="text-lg font-semibold text-primary-400 mb-4 flex items-center gap-2">
+                            04. D E T A L L E S _ D E L _ C O N T R A T O
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Número de Contrato *
                                 </label>
                                 <input
@@ -261,14 +272,14 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="contractNumber"
                                     value={formData.contractNumber}
                                     onChange={handleChange}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.contractNumber ? 'border-red-500' : 'border-slate-300'
+                                    className={`w-full px-4 py-2.5 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100 font-mono ${errors.contractNumber ? 'border-red-500/50' : 'border-slate-800'
                                         }`}
                                     placeholder="CT-2024-001"
                                 />
-                                {errors.contractNumber && <p className="text-red-500 text-xs mt-1">{errors.contractNumber}</p>}
+                                {errors.contractNumber && <p className="text-red-400 text-xs mt-1 font-mono">{errors.contractNumber}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Fecha del Contrato
                                 </label>
                                 <input
@@ -276,58 +287,69 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="contractDate"
                                     value={formData.contractDate}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                                    className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all text-slate-100 scheme-dark"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Moneda *
                                 </label>
                                 <select
                                     name="currency"
                                     value={formData.currency}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                                    className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all text-slate-100"
                                 >
                                     <option value="USD">Dólares (USD)</option>
                                     <option value="VES">Bolívares (VES)</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Monto Contratado *
                                 </label>
-                                <input
-                                    type="number"
-                                    name="contractAmount"
-                                    value={formData.contractAmount}
-                                    onChange={handleChange}
-                                    step="0.01"
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.contractAmount ? 'border-red-500' : 'border-slate-300'
-                                        }`}
-                                    placeholder="500000.00"
-                                />
-                                {errors.contractAmount && <p className="text-red-500 text-xs mt-1">{errors.contractAmount}</p>}
-                            </div>
-                            {formData.currency === 'USD' && (
-                                <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Tasa de Cambio (Bs/USD) *
-                                    </label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-2.5 text-slate-500 font-mono">$</span>
                                     <input
                                         type="number"
-                                        name="exchangeRate"
-                                        value={formData.exchangeRate}
+                                        name="contractAmount"
+                                        value={formData.contractAmount}
                                         onChange={handleChange}
                                         step="0.01"
-                                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900 ${errors.exchangeRate ? 'border-red-500' : 'border-slate-300'
+                                        className={`w-full pl-8 pr-4 py-2.5 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100 font-mono ${errors.contractAmount ? 'border-red-500/50' : 'border-slate-800'
                                             }`}
-                                        placeholder="36.50"
+                                        placeholder="500000.00"
                                     />
-                                    {errors.exchangeRate && <p className="text-red-500 text-xs mt-1">{errors.exchangeRate}</p>}
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        Equivalente: Bs. {(parseFloat(formData.contractAmount || '0') * parseFloat(formData.exchangeRate || '0')).toLocaleString('es-VE', { minimumFractionDigits: 2 })}
-                                    </p>
+                                </div>
+                                {errors.contractAmount && <p className="text-red-400 text-xs mt-1 font-mono">{errors.contractAmount}</p>}
+                            </div>
+                            {formData.currency === 'USD' && (
+                                <div className="md:col-span-2 bg-slate-900/50 border border-slate-800 rounded-lg p-4">
+                                    <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
+                                        Tasa de Cambio (Bs/USD) *
+                                    </label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative flex-1">
+                                            <span className="absolute left-4 top-2.5 text-slate-500 font-mono">Bs</span>
+                                            <input
+                                                type="number"
+                                                name="exchangeRate"
+                                                value={formData.exchangeRate}
+                                                onChange={handleChange}
+                                                step="0.01"
+                                                className={`w-full pl-10 pr-4 py-2.5 bg-slate-950 border rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all text-slate-100 font-mono ${errors.exchangeRate ? 'border-red-500/50' : 'border-slate-800'
+                                                    }`}
+                                                placeholder="36.50"
+                                            />
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-xs text-slate-500 mb-1">Equivalente en Bolívares</p>
+                                            <p className="text-lg font-mono text-emerald-400 font-bold">
+                                                Bs. {(parseFloat(formData.contractAmount || '0') * parseFloat(formData.exchangeRate || '0')).toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {errors.exchangeRate && <p className="text-red-400 text-xs mt-1 font-mono">{errors.exchangeRate}</p>}
                                 </div>
                             )}
                         </div>
@@ -335,10 +357,12 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
 
                     {/* Ubicación y Fechas */}
                     <section>
-                        <h3 className="text-lg font-semibold text-slate-800 mb-4">Ubicación y Fechas</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <h3 className="text-lg font-semibold text-primary-400 mb-4 flex items-center gap-2">
+                            05. U B I C A C I Ó N _ Y _ F E C H A S
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Estado
                                 </label>
                                 <input
@@ -346,12 +370,12 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="state"
                                     value={formData.state}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                                    className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100"
                                     placeholder="Miranda"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Ciudad
                                 </label>
                                 <input
@@ -359,12 +383,12 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="city"
                                     value={formData.city}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                                    className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100"
                                     placeholder="Caracas"
                                 />
                             </div>
-                            <div className="col-span-2">
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Dirección de la Obra
                                 </label>
                                 <input
@@ -372,12 +396,12 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="address"
                                     value={formData.address}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                                    className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all placeholder:text-slate-700 text-slate-100"
                                     placeholder="Av. Principal, Sector X"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Fecha de Inicio
                                 </label>
                                 <input
@@ -385,11 +409,11 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="startDate"
                                     value={formData.startDate}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                                    className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all text-slate-100 scheme-dark"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-1.5">
                                     Fecha Estimada de Fin
                                 </label>
                                 <input
@@ -397,26 +421,26 @@ export default function ProjectFormModal({ onClose, onSuccess }: ProjectFormModa
                                     name="estimatedEndDate"
                                     value={formData.estimatedEndDate}
                                     onChange={handleChange}
-                                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-slate-900"
+                                    className="w-full px-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 outline-none transition-all text-slate-100 scheme-dark"
                                 />
                             </div>
                         </div>
                     </section>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <div className="flex justify-end gap-4 pt-6 border-t border-white/10">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-6 py-2.5 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
+                            className="px-6 py-3 border border-slate-700 text-slate-300 rounded-lg font-medium hover:bg-white/5 hover:text-white transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
+                            className="px-8 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-500 transition-all shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)]"
                         >
-                            Crear Proyecto
+                            Inicializar Proyecto
                         </button>
                     </div>
                 </form>

@@ -190,203 +190,174 @@ export default function ValuationFormModal({
     const totalPartidasWithProgress = progress.filter(p => p.thisValuation > 0).length;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-slate-200">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-slate-900/95 border border-white/10 w-full max-w-[95vw] h-[90vh] rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col text-slate-200">
                 {/* Header */}
-                <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div className="flex justify-between items-center p-6 border-b border-white/10 bg-slate-900/50 backdrop-blur-md rounded-t-xl sticky top-0 z-30">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                            <Calculator className="text-emerald-600" size={24} />
+                        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                            <span className="w-2 h-8 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></span>
                             Nueva Valuación
                         </h2>
-                        <p className="text-sm text-slate-500 mt-0.5">
-                            {project.name} | Valuación #{existingValuations.length + 1}
+                        <p className="text-slate-400 text-sm font-mono mt-1">
+                            {project.name} • {project.code}
                         </p>
                     </div>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onClose}
-                    >
-                        <X size={20} className="text-slate-500 hover:text-slate-800" />
-                    </Button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    {/* Period Selection */}
-                    <div className="bg-slate-50/50 rounded-lg p-4 border border-slate-200">
-                        <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                            <Calendar size={18} className="text-indigo-600" />
-                            Período de Valuación
-                        </h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
-                                    Fecha Inicio *
+                <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+                    <div className="space-y-8">
+                        {/* Period Selection */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="bg-slate-800/30 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-2">
+                                    Fecha de Inicio
                                 </label>
                                 <input
                                     type="date"
                                     value={periodStart}
                                     onChange={(e) => setPeriodStart(e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm ${errors.periodStart ? 'border-red-500' : 'border-slate-300'
-                                        }`}
+                                    className={`w-full px-4 py-2 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all text-slate-100 scheme-dark ${errors.periodStart ? 'border-red-500/50' : 'border-slate-700/50'}`}
                                 />
-                                {errors.periodStart && (
-                                    <p className="text-xs text-red-600 mt-1">{errors.periodStart}</p>
-                                )}
+                                {errors.periodStart && <p className="text-red-400 text-xs mt-1 font-mono">{errors.periodStart}</p>}
                             </div>
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wider mb-1.5">
-                                    Fecha Fin *
+                            <div className="bg-slate-800/30 p-4 rounded-xl border border-white/5 backdrop-blur-sm">
+                                <label className="block text-xs font-mono text-slate-500 uppercase tracking-widest mb-2">
+                                    Fecha de Fin
                                 </label>
                                 <input
                                     type="date"
                                     value={periodEnd}
                                     onChange={(e) => setPeriodEnd(e.target.value)}
-                                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm ${errors.periodEnd ? 'border-red-500' : 'border-slate-300'
-                                        }`}
+                                    className={`w-full px-4 py-2 bg-slate-950/50 border rounded-lg focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 outline-none transition-all text-slate-100 scheme-dark ${errors.periodEnd ? 'border-red-500/50' : 'border-slate-700/50'}`}
                                 />
-                                {errors.periodEnd && (
-                                    <p className="text-xs text-red-600 mt-1">{errors.periodEnd}</p>
-                                )}
+                                {errors.periodEnd && <p className="text-red-400 text-xs mt-1 font-mono">{errors.periodEnd}</p>}
+                            </div>
+                            <div className="bg-slate-800/30 p-4 rounded-xl border border-white/5 backdrop-blur-sm flex flex-col justify-center">
+                                <div className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-1">Periodo</div>
+                                <div className="text-xl font-bold text-white font-mono tracking-tight">
+                                    {periodStart && periodEnd ? Math.max(0, Math.ceil((new Date(periodEnd).getTime() - new Date(periodStart).getTime()) / (1000 * 60 * 60 * 24))) : 0} Días
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* General Error */}
-                    {errors.general && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                            <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-red-800">{errors.general}</p>
-                        </div>
-                    )}
+                        {/* General Error */}
+                        {errors.general && (
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2">
+                                <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-sm text-red-300 font-mono">{errors.general}</p>
+                            </div>
+                        )}
 
-                    {/* Partidas Progress Table */}
-                    <div>
-                        <h3 className="font-semibold text-slate-800 mb-3">
-                            Avances por Partida ({totalPartidasWithProgress} de {partidas.length})
-                        </h3>
-                        <div className="border border-slate-200 rounded-lg overflow-hidden">
-                            <div className="overflow-x-auto max-h-96">
-                                <table className="w-full text-sm">
-                                    <thead className="bg-slate-100 sticky top-0">
-                                        <tr>
-                                            <th className="text-left p-3 font-semibold text-slate-700 w-24 border-b border-slate-200">Código</th>
-                                            <th className="text-left p-3 font-semibold text-slate-700 border-b border-slate-200">Descripción</th>
-                                            <th className="text-center p-3 font-semibold text-slate-700 w-20 border-b border-slate-200">Unidad</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-24 border-b border-slate-200">Contratado</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-24 border-b border-slate-200">Acumulado</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-24 border-b border-slate-200">Restante</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-32 border-b border-slate-200">Esta Valuación</th>
-                                            <th className="text-right p-3 font-semibold text-slate-700 w-32 border-b border-slate-200">Monto</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {progress.map((p, idx) => {
-                                            const amount = p.thisValuation * p.unitPrice;
-                                            const hasProgress = p.thisValuation > 0;
+                        {/* Partidas Table */}
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                                PROGRESO FÍSICO ({totalPartidasWithProgress} de {partidas.length})
+                            </h3>
 
-                                            return (
-                                                <tr
-                                                    key={p.partidaId}
-                                                    className={`${hasProgress ? 'bg-emerald-50/50' : 'hover:bg-slate-50'
-                                                        }`}
-                                                >
-                                                    <td className="p-3">
-                                                        <span className="text-xs font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">{p.code}</span>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <span className="text-slate-700 line-clamp-2" title={p.description}>{p.description}</span>
-                                                    </td>
-                                                    <td className="p-3 text-center">
-                                                        <span className="text-slate-500 text-xs">{p.unit}</span>
-                                                    </td>
-                                                    <td className="p-3 text-right text-slate-600 font-mono text-xs">
-                                                        {Number(p.contracted || 0).toFixed(2)}
-                                                    </td>
-                                                    <td className="p-3 text-right text-slate-600 font-mono text-xs">
-                                                        {Number(p.previousAccumulated || 0).toFixed(2)}
-                                                    </td>
-                                                    <td className="p-3 text-right font-mono text-xs">
-                                                        <span className={p.remaining > 0 ? 'text-amber-600 font-medium' : 'text-slate-400'}>
-                                                            {Number(p.remaining || 0).toFixed(2)}
-                                                        </span>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <input
-                                                            type="number"
-                                                            step="0.01"
-                                                            min="0"
-                                                            max={p.remaining}
-                                                            value={p.thisValuation || ''}
-                                                            onChange={(e) => handleProgressChange(p.partidaId, e.target.value)}
-                                                            disabled={p.remaining <= 0}
-                                                            className={`w-full px-2 py-1 border rounded text-right font-mono text-sm focus:ring-2 focus:ring-emerald-500 transition-colors ${p.remaining <= 0
-                                                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                                                : hasProgress
-                                                                    ? 'border-emerald-500 bg-white font-bold text-emerald-700'
-                                                                    : 'border-slate-300'
-                                                                }`}
-                                                            placeholder="0.00"
-                                                        />
-                                                    </td>
-                                                    <td className="p-3 text-right font-mono text-sm">
-                                                        <span className={hasProgress ? 'font-bold text-emerald-600' : 'text-slate-400'}>
-                                                            {formatCurrency(amount, currency)}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                            <div className="rounded-xl border border-white/10 overflow-hidden bg-slate-900/50">
+                                <div className="overflow-x-auto max-h-[500px]">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="text-xs text-slate-400 uppercase bg-slate-800/50 font-mono tracking-wider sticky top-0 z-10 backdrop-blur-md">
+                                            <tr>
+                                                <th className="px-6 py-4 font-medium">Partida</th>
+                                                <th className="px-6 py-4 font-medium text-center">Unidad</th>
+                                                <th className="px-6 py-4 font-medium text-right">Contratado</th>
+                                                <th className="px-6 py-4 font-medium text-right">Acumulado</th>
+                                                <th className="px-6 py-4 font-medium text-right">Restante</th>
+                                                <th className="px-6 py-4 font-medium text-right bg-emerald-950/20 border-l border-white/5 w-48">
+                                                    Esta Valuación
+                                                </th>
+                                                <th className="px-6 py-4 font-medium text-right">Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-800">
+                                            {progress.map((p) => {
+                                                const amount = p.thisValuation * p.unitPrice;
+                                                const hasProgress = p.thisValuation > 0;
+
+                                                return (
+                                                    <tr key={p.partidaId} className={`hover:bg-white/5 transition-colors group ${hasProgress ? 'bg-emerald-900/10' : ''}`}>
+                                                        <td className="px-6 py-4 font-medium text-slate-200 min-w-[300px]">
+                                                            <div className="font-mono text-xs text-slate-500 mb-1 bg-slate-800/50 inline-block px-1.5 py-0.5 rounded">{p.code}</div>
+                                                            <div className="line-clamp-2" title={p.description}>{p.description}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center text-slate-400 text-xs">
+                                                            {p.unit}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-mono text-slate-300 text-xs">
+                                                            {p.contracted.toFixed(2)}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-mono text-slate-400 text-xs">
+                                                            {p.previousAccumulated.toFixed(2)}
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-mono text-xs">
+                                                            <span className={p.remaining > 0 ? 'text-amber-500 font-medium' : 'text-slate-500'}>
+                                                                {p.remaining.toFixed(2)}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-right bg-emerald-950/10 border-l border-r border-white/5">
+                                                            <input
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                max={p.remaining}
+                                                                value={p.thisValuation || ''}
+                                                                onChange={(e) => handleProgressChange(p.partidaId, e.target.value)}
+                                                                disabled={p.remaining <= 0}
+                                                                className={`w-full bg-slate-950/50 border rounded px-3 py-2 text-right font-mono text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all ${p.remaining <= 0 ? 'opacity-50 cursor-not-allowed border-slate-800' :
+                                                                        hasProgress ? 'border-emerald-500/50 bg-emerald-950/30' : 'border-slate-700'
+                                                                    }`}
+                                                                placeholder="0.00"
+                                                            />
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right font-mono text-sm">
+                                                            <span className={hasProgress ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                                                                {formatCurrency(amount, currency)}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Summary */}
-                    <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                        <h3 className="font-bold text-slate-800 mb-4 text-lg">Resumen de Valuación</h3>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <span className="text-slate-600 text-sm uppercase tracking-wider">Monto Bruto</span>
-                                <span className="font-bold text-lg text-slate-800 font-mono">
-                                    {formatCurrency(grossAmount, currency)}
-                                </span>
+                        {/* Summary Section */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-white/10">
+                            <div>
+                                {/* Space for notes if needed later */}
                             </div>
 
-                            {/* Deductions */}
-                            <div className="border-t border-slate-200 pt-3 space-y-2">
+                            <div className="bg-slate-800/50 rounded-xl p-6 border border-white/5 space-y-3">
+                                <h3 className="font-bold text-slate-200 mb-4 text-lg border-b border-white/10 pb-2">Resumen Financiero</h3>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-400">Monto Bruto</span>
+                                    <span className="font-mono text-slate-200">{formatCurrency(grossAmount, currency)}</span>
+                                </div>
+
+                                {/* Deductions */}
                                 {advancePaymentDeduction > 0 && (
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-slate-600">
-                                            (-) Amortización Anticipo ({(legalConfig.advancePayment * 100).toFixed(1)}%)
-                                        </span>
-                                        <span className="font-medium text-red-600 font-mono">
-                                            -{formatCurrency(advancePaymentDeduction, currency)}
-                                        </span>
+                                        <span className="text-slate-400">(-) Amortización Anticipo</span>
+                                        <span className="font-mono text-red-400">-{formatCurrency(advancePaymentDeduction, currency)}</span>
                                     </div>
                                 )}
 
                                 {ivaAmount > 0 && (
                                     <>
                                         <div className="flex justify-between items-center text-sm">
-                                            <span className="text-slate-600">
-                                                (+) IVA ({(legalConfig.ivaRate * 100).toFixed(0)}%)
-                                            </span>
-                                            <span className="font-medium text-emerald-600 font-mono">
-                                                +{formatCurrency(ivaAmount, currency)}
-                                            </span>
+                                            <span className="text-slate-400">(+) IVA</span>
+                                            <span className="font-mono text-emerald-400">+{formatCurrency(ivaAmount, currency)}</span>
                                         </div>
                                         {ivaRetention > 0 && (
                                             <div className="flex justify-between items-center text-sm">
-                                                <span className="text-slate-600">
-                                                    (-) Retención IVA ({(legalConfig.retentionIVA * 100).toFixed(0)}%)
-                                                </span>
-                                                <span className="font-medium text-red-600 font-mono">
-                                                    -{formatCurrency(ivaRetention, currency)}
-                                                </span>
+                                                <span className="text-slate-400">(-) Retención IVA</span>
+                                                <span className="font-mono text-red-400">-{formatCurrency(ivaRetention, currency)}</span>
                                             </div>
                                         )}
                                     </>
@@ -394,73 +365,65 @@ export default function ValuationFormModal({
 
                                 {islrRetention > 0 && (
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-slate-600">
-                                            (-) Retención ISLR ({(legalConfig.retentionISLR * 100).toFixed(1)}%)
-                                        </span>
-                                        <span className="font-medium text-red-600 font-mono">
-                                            -{formatCurrency(islrRetention, currency)}
-                                        </span>
+                                        <span className="text-slate-400">(-) Retención ISLR</span>
+                                        <span className="font-mono text-red-400">-{formatCurrency(islrRetention, currency)}</span>
                                     </div>
                                 )}
 
                                 {guaranteeFund > 0 && (
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-slate-600">
-                                            (-) Fondo de Garantía ({(legalConfig.performanceBond * 100).toFixed(1)}%)
-                                        </span>
-                                        <span className="font-medium text-red-600 font-mono">
-                                            -{formatCurrency(guaranteeFund, currency)}
-                                        </span>
+                                        <span className="text-slate-400">(-) Fondo de Garantía</span>
+                                        <span className="font-mono text-red-400">-{formatCurrency(guaranteeFund, currency)}</span>
                                     </div>
                                 )}
-                            </div>
 
-                            {/* Net Amount */}
-                            <div className="border-t-2 border-slate-200 pt-3 flex justify-between items-center mt-4">
-                                <span className="font-bold text-slate-800 text-lg">MONTO NETO A PAGAR</span>
-                                <span className="font-bold text-2xl text-emerald-600 font-mono">
-                                    {formatCurrency(netAmount, currency)}
-                                </span>
+                                <div className="h-px bg-white/10 my-2"></div>
+                                <div className="flex justify-between items-center text-lg font-bold">
+                                    <span className="text-emerald-400">MONTO NETO A PAGAR</span>
+                                    <span className="font-mono text-white text-xl">
+                                        {formatCurrency(netAmount, currency)}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
-                    <div className="text-sm text-slate-600">
+                <div className="border-t border-white/10 bg-slate-900/50 backdrop-blur-md p-6 rounded-b-xl flex justify-between items-center sticky bottom-0 z-30">
+                    <div className="text-sm text-slate-500">
                         {totalPartidasWithProgress > 0 ? (
-                            <span className="flex items-center gap-2 text-emerald-600 font-medium">
+                            <span className="flex items-center gap-2 text-emerald-400 font-medium">
                                 <CheckCircle2 size={16} />
                                 {totalPartidasWithProgress} partida{totalPartidasWithProgress !== 1 ? 's' : ''} con avance
                             </span>
                         ) : (
-                            <span className="flex items-center gap-2 text-amber-600">
+                            <span className="flex items-center gap-2 text-amber-500">
                                 <AlertCircle size={16} />
                                 Sin avances registrados
                             </span>
                         )}
                     </div>
-                    <div className="flex gap-3">
-                        <Button
-                            variant="ghost"
+                    <div className="flex gap-4">
+                        <button
+                            type="button"
                             onClick={onClose}
+                            className="px-6 py-2.5 bg-transparent border border-slate-700 text-slate-300 rounded-lg hover:bg-slate-800 hover:text-white transition-all text-sm font-medium tracking-wide uppercase"
                         >
                             Cancelar
-                        </Button>
-                        <Button
-                            variant="outline"
+                        </button>
+                        <button
                             onClick={() => handleSubmit('draft')}
+                            className="px-6 py-2.5 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all text-sm font-bold tracking-wide uppercase"
                         >
                             Guardar Borrador
-                        </Button>
-                        <Button
-                            variant="primary"
+                        </button>
+                        <button
                             onClick={() => handleSubmit('submitted')}
-                            className="bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
+                            className="px-8 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] text-sm font-bold tracking-wide uppercase flex items-center gap-2"
                         >
                             Crear Valuación
-                        </Button>
+                        </button>
                     </div>
                 </div>
             </div>
