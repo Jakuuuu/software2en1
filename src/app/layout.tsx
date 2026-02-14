@@ -4,6 +4,7 @@ import "./globals.css";
 import { ToastProvider } from "@/components/Toast";
 import { SocketProvider } from "@/context/SocketContext";
 import Navbar from "@/components/Navbar";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,10 +22,12 @@ export default function RootLayout({
     <html lang="es">
       <body className={inter.className}>
         <SocketProvider>
-          <ToastProvider>
-            <Navbar />
-            {children}
-          </ToastProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <Navbar />
+              {children}
+            </ToastProvider>
+          </AuthProvider>
         </SocketProvider>
       </body>
     </html>
